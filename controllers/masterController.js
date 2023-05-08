@@ -4,14 +4,14 @@ class MasterController {
 
     async getAll(req, res) {
         const masters = await db.query('SELECT master.id, master.name, city.title FROM master JOIN city ON city.id=master.city_id');
-        console.table(masters.rows);
+        console.table('get masters');
         res.json(masters.rows);
     }
 
     async create(req, res) {
         const { name, city_id } = req.body;
         const master = await db.query('INSERT INTO master (name, city_id) values ($1, $2) RETURNING *', [name, city_id]);
-        console.log(master.rows);
+        console.log('create', master.rows);
         if (!req.body) return res.sendStatus(400);
         res.json(master.rows);
     }

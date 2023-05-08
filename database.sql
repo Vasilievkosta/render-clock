@@ -13,7 +13,8 @@ create TABLE master(
 create TABLE users(
 	id SERIAL PRIMARY KEY,
 	userName VARCHAR(30),
-	email VARCHAR(30),	
+	email VARCHAR(30),
+	date VARCHAR(100),
 	time VARCHAR(100),
 	city_id INTEGER,
 	FOREIGN KEY (city_id) REFERENCES city (id)
