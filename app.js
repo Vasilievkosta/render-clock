@@ -12,13 +12,11 @@ let token = () => {
 	return Math.trunc(Math.random()*1e6).toString(36);
 }
 
-
-
 const app = express();
-let secret = 'qwerty'
-app.use(cookieParser(secret))
+
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser())
 app.use('/api', router);
 
 
@@ -32,13 +30,14 @@ app.post('/auth', function async(req, res) {
 	console.log(req.body);	
 	let valid = req.body.password === process.env.ADMIN_PASSWORD && req.body.email === process.env.ADMIN_EMAIL;
 			
-	console.log(valid);
+	console.log(valid);	
 	if (valid) {
-		res.cookie('token', 'token-Elena', {
+		res.cookie('token', token(), {
 			secure: true,
 			httpOnly: true,
 		});	
-		
+		global.name = valid
+		console.log(global.name)
 	}	
 	if (!req.body) return res.sendStatus(400);
 	res.json(valid);
@@ -46,7 +45,8 @@ app.post('/auth', function async(req, res) {
 
 app.get('/logout', (req, res) => {
 	console.log('logout');
-	res.clearCookie('token');		
+	res.clearCookie('token');
+	global.name === false
 	res.send('logout');
 });
 
