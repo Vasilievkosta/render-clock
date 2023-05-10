@@ -13,7 +13,8 @@ let token = () => {
 }
 
 const app = express();
-app.use(cookieParser())
+let secret = 'qwerty'
+app.use(cookieParser(secret))
 app.use(cors());
 app.use(express.json());
 app.use('/api', router);
