@@ -25,10 +25,10 @@ app.get('/', (req, res) => {
 	res.send('start !');
 });
 
-app.post("/auth", function (req, res) {
-	console.log(req.body);
-	
+app.post('/auth', function async(req, res) {
+	console.log(req.body);	
 	let valid = req.body.password === process.env.ADMIN_PASSWORD && req.body.email === process.env.ADMIN_EMAIL;
+	
 	console.log(valid);
 	if (valid) {
 		res.cookie('token', token());

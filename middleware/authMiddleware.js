@@ -7,7 +7,7 @@ module.exports = function (req, res, next) {
 	}
 	try {
 		
-		if(req.cookies.token === undefined) {
+		if(!req.cookies.token) {
 			res.status(401).json({ message: "Не авторизован" });
 		 } else {
 			next();
