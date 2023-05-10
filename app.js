@@ -21,8 +21,7 @@ app.use('/api', router);
 
 
 app.get('/', (req, res) => {
-	console.log('start for Render');
-	
+	console.log('start for Render');	
 	res.send('start !');
 });
 
@@ -35,9 +34,8 @@ app.post('/auth', function async(req, res) {
 		res.cookie('token', token(), {
 			secure: true,
 			httpOnly: true,
-		});	
-		global.name = valid
-		console.log(global.name)
+		});		
+		global.name = valid		
 	}	
 	if (!req.body) return res.sendStatus(400);
 	res.json(valid);
@@ -46,7 +44,7 @@ app.post('/auth', function async(req, res) {
 app.get('/logout', (req, res) => {
 	console.log('logout');
 	res.clearCookie('token');
-	global.name === false
+	global.name = false
 	res.send('logout');
 });
 

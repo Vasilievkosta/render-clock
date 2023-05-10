@@ -1,8 +1,9 @@
 const Router = require('express');
 const router = new Router();
 const userController = require('../controllers/userController');
+const authMiddleware = require('../middleware/authMiddleware');
 
-router.get('/', userController.getAll);
+router.get('/', authMiddleware, userController.getAll);
 router.post('/create', userController.create);
 router.delete('/delete/:id', userController.delete);
 
