@@ -8,9 +8,9 @@ const router = require('./routes/appRouter');
 
 const PORT = process.env.PORT || 5000;
 
-// let token = () => {
-	// return Math.trunc(Math.random()*1e6).toString(36);
-// }
+let token = () => {
+	return Math.trunc(Math.random()*1e6).toString(36);
+}
 
 
 

@@ -7,7 +7,6 @@ module.exports = function (req, res, next) {
 	}
 	try {
 		
-		console.log(req.cookies.token)
 		if(!req.cookies.token) {
 			
 			res.status(401).json({ message: "Не авторизован!" });
