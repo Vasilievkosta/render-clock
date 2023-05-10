@@ -31,9 +31,7 @@ app.get('/', (req, res) => {
 app.post('/auth', function async(req, res) {
 	console.log(req.body);	
 	let valid = req.body.password === process.env.ADMIN_PASSWORD && req.body.email === process.env.ADMIN_EMAIL;
-	
-	console.log(a);
-	
+			
 	console.log(valid);
 	if (valid) {
 		res.cookie('token', 'token-Elena', {
