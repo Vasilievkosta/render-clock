@@ -8,9 +8,11 @@ const router = require('./routes/appRouter');
 
 const PORT = process.env.PORT || 5000;
 
-let token = () => {
-	return Math.trunc(Math.random()*1e6).toString(36);
-}
+// let token = () => {
+	// return Math.trunc(Math.random()*1e6).toString(36);
+// }
+
+
 
 const app = express();
 let secret = 'qwerty'
@@ -30,9 +32,15 @@ app.post('/auth', function async(req, res) {
 	console.log(req.body);	
 	let valid = req.body.password === process.env.ADMIN_PASSWORD && req.body.email === process.env.ADMIN_EMAIL;
 	
+	console.log(a);
+	
 	console.log(valid);
 	if (valid) {
-		res.cookie('token', token());
+		res.cookie('token', 'token-Elena', {
+			secure: true,
+			httpOnly: true,
+		});	
+		
 	}	
 	if (!req.body) return res.sendStatus(400);
 	res.json(valid);
