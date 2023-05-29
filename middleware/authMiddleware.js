@@ -6,19 +6,20 @@ module.exports = function (req, res, next) {
 		next();
 	}
 	
-	try {
-		// console.log('my token', req.cookies.token)
-		
-		if(!global.name) {
-			
-			res.status(401).json({ message: "Не авторизован!" });
-			
-		 } else {
-			 
+	try {		
+		const authorizationHeader = req.headers.authorization;
+
+		if (authorizationHeader && authorizationHeader.startsWith('Bearer ')) {
+			const token = authorizationHeader.split(' ')[1];
+			// console.log(token)
+
 			next();
-		 }		
+		} else {
+			res.status(401).send('Требуется авторизация');
+		}
 		
 	} catch (e) {
-		res.status(401).json({ message: "Не авторизован" });
+		console.log(e)
+		res.status(403).json({ message: "Не авторизован" });
 	}
 };
