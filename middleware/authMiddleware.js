@@ -18,9 +18,8 @@ module.exports = function (req, res, next) {
 			
 			next();
 		} else {
-			res.status(401).send('Требуется авторизация.');
-		}
-		
+			res.status(401).send('Требуется авторизация');
+		}		
 		
 	} catch (e) {
 		console.log(e)

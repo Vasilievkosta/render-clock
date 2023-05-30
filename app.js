@@ -17,6 +17,7 @@ app.use(cookieParser())
 app.use('/api', router);
 
 const generateAccessToken = (email, password) => {
+	
 	const payload = {
 		email,
 		password
@@ -31,19 +32,20 @@ app.get('/', (req, res) => {
 });
 
 app.post('/auth', function async(req, res) {
-	console.log(req.body);
+	//console.log(req.body);
 	const {email, password} = req.body
 	let valid = req.body.password === process.env.ADMIN_PASSWORD && req.body.email === process.env.ADMIN_EMAIL;
 	
-	if(valid) {
-		const token = generateAccessToken(email, password)
+	if(valid) {		
 		// res.setHeader('Authorization', `Bearer ${token}`);
-		res.header('x-auth-token', token);
+		//res.header('x-auth-token', token);
 	}
-	console.log(valid);	
+	const token = generateAccessToken(email, password)
+	
+	let data = {data: valid, token: token}
 	
 	if (!req.body) return res.sendStatus(400);
-	res.json(valid);
+	res.json(data);
 });
 
 app.get('/logout', (req, res) => {
