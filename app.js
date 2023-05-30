@@ -37,7 +37,8 @@ app.post('/auth', function async(req, res) {
 	
 	if(valid) {
 		const token = generateAccessToken(email, password)
-		res.setHeader('Authorization', `Bearer ${token}`);
+		// res.setHeader('Authorization', `Bearer ${token}`);
+		res.header('x-auth-token', token);
 	}
 	console.log(valid);	
 	
