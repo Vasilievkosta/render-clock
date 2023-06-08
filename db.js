@@ -11,7 +11,9 @@ require('dotenv').config();
 
 const devConfig = `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
 
-const proConfig = `postgres://${process.env.Username}:${process.env.Password}@${process.env.Hostname}/${process.env.Database}`;
+const proConfig = `postgres://postgresql:25NPOU1oq2DXwm36vV3nBQELWO6leQUA@dpg-ci131eo2qv2bf1h6hphg-a/database_clock_xhda`;
+
+// const proConfig = `postgres://USER:PASSWORD@INTERNAL_HOST:PORT/DATABASE`;
  
 const pool = new Pool({
 	
