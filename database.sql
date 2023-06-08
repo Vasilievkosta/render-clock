@@ -1,13 +1,18 @@
-create TABLE city(
+create TABLE masters(
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(255) NOT NULL
+);
+
+create TABLE cities(
 	id SERIAL PRIMARY KEY,
 	title VARCHAR(255) NOT NULL
 );
 
-create TABLE master(
-	id SERIAL PRIMARY KEY,
-	name VARCHAR(255),	
+create TABLE master_cities(
+	master_id INTEGER,
 	city_id INTEGER,
-	FOREIGN KEY (city_id) REFERENCES city (id)
+	FOREIGN KEY (master_id) REFERENCES masters (id),	
+	FOREIGN KEY (city_id) REFERENCES cities (id)	
 );
 
 create TABLE users(
@@ -17,5 +22,5 @@ create TABLE users(
 	date VARCHAR(100),
 	time VARCHAR(100),
 	city_id INTEGER,
-	FOREIGN KEY (city_id) REFERENCES city (id)
+	FOREIGN KEY (city_id) REFERENCES cities (id)
 );

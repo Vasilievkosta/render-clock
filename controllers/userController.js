@@ -3,7 +3,7 @@ const db = require('../db');
 class UserController {
 
     async getAll(req, res) {
-        const users = await db.query('SELECT users.id, users.userName, users.email, users.date, users.time, city.title FROM users JOIN city ON city.id=users.city_id');
+        const users = await db.query('SELECT users.id, users.userName, users.email, users.date, users.time, cities.title FROM users JOIN cities ON cities.id=users.city_id');
         console.log('get users');
         res.json(users.rows);
     }
