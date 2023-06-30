@@ -7,6 +7,13 @@ class MasterController {
         console.table('get masters');		
         res.json(masters.rows);
     }
+	
+	async ofTheCity(req, res) {
+		const cityId = req.params.id;
+		const masters = await db.query('SELECT m.* FROM masters m JOIN master_cities mc ON mc.master_id = m.id JOIN cities c ON c.id = mc.city_id WHERE c.id = $1', [cityId]);
+		console.table('get masters of the city');		
+        res.json(masters.rows);
+    }
 
     async create(req, res) {
         const { name, arr } = req.body;

@@ -4,7 +4,9 @@ const masterController = require('../controllers/masterController');
 const authMiddleware = require('../middleware/authMiddleware');
 
 router.get('/', authMiddleware, masterController.getAll);
+router.get('/ofcity/:id', masterController.ofTheCity);
 router.post('/create', masterController.create);
 router.delete('/delete/:name', masterController.delete);
+
 
 module.exports = router;

@@ -24,3 +24,30 @@ create TABLE users(
 	city_id INTEGER,
 	FOREIGN KEY (city_id) REFERENCES cities (id)
 );
+
+-- fix the table users and add the table orders
+
+create TABLE users(
+	id SERIAL PRIMARY KEY,
+	userName VARCHAR(30),
+	email VARCHAR(30),	
+	city_id INTEGER,
+	FOREIGN KEY (city_id) REFERENCES cities (id)
+);
+
+create TABLE orders(
+	id SERIAL PRIMARY KEY,
+	date VARCHAR(100),
+	time VARCHAR(100),
+	user_id INTEGER,
+	master_id INTEGER,
+	FOREIGN KEY (user_id) REFERENCES users (id),
+	FOREIGN KEY (master_id) REFERENCES masters (id)
+);
+
+--вывод всех заказов
+SELECT o.date, o.time, u.userName AS user_name, m.name AS master_name, c.title AS city_name
+FROM orders o
+JOIN users u ON o.user_id = u.id
+JOIN masters m ON o.master_id = m.id
+JOIN cities c ON u.city_id = c.id;
