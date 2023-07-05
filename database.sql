@@ -18,18 +18,6 @@ create TABLE master_cities(
 create TABLE users(
 	id SERIAL PRIMARY KEY,
 	userName VARCHAR(30),
-	email VARCHAR(30),
-	date VARCHAR(100),
-	time VARCHAR(100),
-	city_id INTEGER,
-	FOREIGN KEY (city_id) REFERENCES cities (id)
-);
-
--- fix the table users and add the table orders
-
-create TABLE users(
-	id SERIAL PRIMARY KEY,
-	userName VARCHAR(30),
 	email VARCHAR(30),	
 	city_id INTEGER,
 	FOREIGN KEY (city_id) REFERENCES cities (id)

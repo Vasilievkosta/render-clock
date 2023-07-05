@@ -3,7 +3,7 @@ const db = require('../db');
 class OrderController {
 
     async getAll(req, res) {
-        const orders = await db.query('SELECT o.date, o.time, u.userName AS user_name, m.name AS master_name, c.title AS city_name FROM orders o JOIN users u ON o.user_id = u.id JOIN masters m ON o.master_id = m.id JOIN cities c ON u.city_id = c.id;');
+        const orders = await db.query('SELECT o.id, o.date, o.time, u.userName AS user_name, m.name AS master_name, c.title AS city_name FROM orders o JOIN users u ON o.user_id = u.id JOIN masters m ON o.master_id = m.id JOIN cities c ON u.city_id = c.id;');
         res.json(orders.rows);
     }
 
