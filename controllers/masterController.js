@@ -43,15 +43,25 @@ class MasterController {
 				return res.sendStatus(404);
 			}
 
-			const masterId = master.rows[0].id;
-			console.log('masterId ', typeof masterId)
-			// Удаляем связи мастера из промежуточной таблицы
-			await db.query('DELETE FROM master_cities WHERE master_id = $1', [masterId]);
+			const masterId = master.rows[0].id;			
+			console.log(masterId)
+			const orders = await db.query('SELECT * FROM orders WHERE master_id = $1', [masterId]);
+			
+			if (orders.rows.length > 0) {
+				console.log(orders.rows)
+			// Есть связанные заказы, нельзя удалить пользователя
+			console.log('Cannot delete user. Orders are associated with the user.');
+			res.status(400).json({ error: 'Cannot delete user. Orders are associated with the user.' });
+			
+			} else {			
+				// Удаляем связи мастера из промежуточной таблицы
+				await db.query('DELETE FROM master_cities WHERE master_id = $1', [masterId]);
 
-			// Затем удаляем саму запись мастера
-			let data = await db.query('DELETE FROM masters WHERE id = $1', [masterId]);
-			console.log(data)
-			res.sendStatus(204);
+				// Затем удаляем саму запись мастера
+				let data = await db.query('DELETE FROM masters WHERE id = $1', [masterId]);
+				console.log(data)
+				res.sendStatus(204);
+			}
 			
 		} catch (error) {
 			console.error(error);
@@ -61,3 +71,4 @@ class MasterController {
 }
 
 module.exports = new MasterController();
+

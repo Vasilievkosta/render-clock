@@ -7,6 +7,20 @@ class UserController {
         console.log('get users');
         res.json(users.rows);
     }
+	
+	async getUser(req, res) {
+		const email = req.params.email;
+        const existingUser = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+        
+		if (existingUser.rows.length > 0) {		
+		console.log('User already exists:', existingUser.rows[0]);		
+		res.json(existingUser.rows[0]);
+		
+		} else {			
+			console.log('User not found');
+			res.json(null);
+		}
+	}    
 
     async create(req, res) {
         const { userName, email, city_id } = req.body;
@@ -18,12 +32,20 @@ class UserController {
 
     async delete(req, res) {
         const id = req.params.id;
-        const users = await db.query('SELECT users.userName FROM users WHERE id = $1', [id]);
-        await db.query('DELETE FROM users WHERE id = $1', [id]);
-        console.log('delete', users.rows);
-        res.json(users.rows);
+		const orders = await db.query('SELECT * FROM orders WHERE user_id = $1', [id]);
+		
+        if (orders.rows.length > 0) {
+			// Есть связанные заказы, нельзя удалить пользователя
+			console.log('Cannot delete user. Orders are associated with the user.');
+			res.status(400).json({ error: 'Cannot delete user. Orders are associated with the user.' });
+			
+			} else {
+				
+			const deletedUser = await db.query('DELETE FROM users WHERE id = $1 RETURNING *', [id]);
+			console.log('Deleted user:', deletedUser.rows[0]);
+			res.json(deletedUser.rows[0]);
+		}
     }
-
 }
 
 module.exports = new UserController();

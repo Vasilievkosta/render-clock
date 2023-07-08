@@ -27,6 +27,7 @@ create TABLE orders(
 	id SERIAL PRIMARY KEY,
 	date VARCHAR(100),
 	time VARCHAR(100),
+	duration INTEGER,
 	user_id INTEGER,
 	master_id INTEGER,
 	FOREIGN KEY (user_id) REFERENCES users (id),

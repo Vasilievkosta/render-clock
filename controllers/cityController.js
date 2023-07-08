@@ -18,12 +18,23 @@ class CityController {
 
     async delete(req, res) {
         const id = req.params.id;
-        const city = await db.query('SELECT cities.title FROM cities WHERE id = $1', [id]);
-        await db.query('DELETE FROM cities WHERE id = $1', [id]);
-        console.log('delete', city.rows);
-        res.json(city.rows);
+		
+		const users = await db.query('SELECT * FROM users WHERE city_id = $1', [id]);
+		const master_id = await db.query('SELECT * FROM master_cities WHERE city_id = $1', [id]);
+		
+		if (users.rows.length > 0 || master_id.rows.length > 0) {
+		// // Есть пользователи или мастера, связанные с городом
+		console.log('Cannot delete city. Users or masters are associated with it.');		
+		res.status(400).json({ error: 'Cannot delete city. Users or masters are associated with it.' });
+		} else {
+			const city = await db.query('SELECT cities.title FROM cities WHERE id = $1', [id]);
+			await db.query('DELETE FROM cities WHERE id = $1', [id]);
+			console.log('delete', city.rows);
+			res.json(city.rows);
+		}
     }
 
 }
 
 module.exports = new CityController();
+		
