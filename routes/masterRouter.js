@@ -9,4 +9,7 @@ router.post('/create', masterController.create);
 router.delete('/delete/:name', masterController.delete);
 
 
+router.post('/ofcitytest', masterController.ofTheCityTest);
+
+
 module.exports = router;
