@@ -14,7 +14,7 @@ module.exports = function (req, res, next) {
 			
 			// here you can check the token
 			const decoderToken = jwt.verify(token, "SECRET_KEY")
-			// console.log(decoderToken)
+			
 			
 			next();
 		} else {

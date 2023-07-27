@@ -30,7 +30,7 @@ class CityController {
 			const city = await db.query('SELECT cities.title FROM cities WHERE id = $1', [id]);
 			await db.query('DELETE FROM cities WHERE id = $1', [id]);
 			console.log('delete', city.rows);
-			res.json(city.rows);
+			res.status(200).send();
 		}
     }
 

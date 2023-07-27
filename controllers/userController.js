@@ -39,11 +39,10 @@ class UserController {
 			console.log('Cannot delete user. Orders are associated with the user.');
 			res.status(400).json({ error: 'Cannot delete user. Orders are associated with the user.' });
 			
-			} else {
-				
+			} else {				
 			const deletedUser = await db.query('DELETE FROM users WHERE id = $1 RETURNING *', [id]);
 			console.log('Deleted user:', deletedUser.rows[0]);
-			res.json(deletedUser.rows[0]);
+			res.status(200).send();
 		}
     }
 }

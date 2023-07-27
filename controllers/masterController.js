@@ -1,7 +1,7 @@
 const db = require('../db');
 
 function hours(h) {
-	return parseInt(h.split(":")[0], 10);
+	return parseInt(h, 10);
 }
 
 function findMasters(startOrder, durationOrder, startMaster, durationMaster) {
@@ -15,16 +15,9 @@ class MasterController {
         const masters = await db.query('SELECT m.name AS master_name, c.title AS city_title FROM masters m JOIN master_cities mc ON m.id = mc.master_id JOIN cities c ON mc.city_id = c.id');
         console.table('get masters');		
         res.json(masters.rows);
-    }
-	
-	async ofTheCity(req, res) {
-		const cityId = req.params.id;
-		const masters = await db.query('SELECT m.* FROM masters m JOIN master_cities mc ON mc.master_id = m.id JOIN cities c ON c.id = mc.city_id WHERE c.id = $1', [cityId]);
-		console.table('get masters of the city');		
-        res.json(masters.rows);
-    }
+    }	
 
-	async ofTheCityTest(req, res) {
+	async onDateAndTime(req, res) {
 		const { cityId, date, time, duration } = req.body;
 		// поиск всех мастеров в городе по cityId
 		const masters = await db.query('SELECT m.* FROM masters m JOIN master_cities mc ON mc.master_id = m.id JOIN cities c ON c.id = mc.city_id WHERE c.id = $1', [cityId]);		
@@ -87,9 +80,9 @@ class MasterController {
 			
 			if (orders.rows.length > 0) {
 				console.log(orders.rows)
-			// Есть связанные заказы, нельзя удалить пользователя
-			console.log('Cannot delete user. Orders are associated with the user.');
-			res.status(400).json({ error: 'Cannot delete user. Orders are associated with the user.' });
+			// Есть связанные заказы, нельзя удалить мастера
+			console.log('Cannot delete master. Orders are associated with the master.');
+			res.status(400).json({ error: 'Cannot delete master. Orders are associated with the master.' });
 			
 			} else {			
 				// Удаляем связи мастера из промежуточной таблицы

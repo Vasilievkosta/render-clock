@@ -32,7 +32,7 @@ app.get('/', (req, res) => {
 });
 
 app.post('/auth', function async(req, res) {
-	//console.log(req.body);
+	// console.log(req.body);
 	const {email, password} = req.body
 	let valid = req.body.password === process.env.ADMIN_PASSWORD && req.body.email === process.env.ADMIN_EMAIL;
 	
