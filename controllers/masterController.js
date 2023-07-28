@@ -15,7 +15,33 @@ class MasterController {
         const masters = await db.query('SELECT m.name AS master_name, c.title AS city_title FROM masters m JOIN master_cities mc ON m.id = mc.master_id JOIN cities c ON mc.city_id = c.id');
         console.table('get masters');		
         res.json(masters.rows);
-    }	
+    }
+
+	async getMasterOfCities(req, res) {
+		
+		try {
+			const masters = await db.query(`
+			  SELECT m.id AS master_id, m.name AS master_name, 
+					 json_agg(json_build_object('id', c.id, 'title', c.title)) AS cities
+			  FROM masters m
+			  JOIN master_cities mc ON m.id = mc.master_id
+			  JOIN cities c ON mc.city_id = c.id
+			  GROUP BY m.id, m.name;
+			`);
+
+			if (masters.rows.length === 0) {
+			  // Если мастерa не найдены, вернуть статус 404 и сообщение об ошибке
+			  return res.status(404).json({ error: 'Мастеры не найдены' });
+			}
+
+			res.json(masters.rows);
+			
+		} catch (error) {
+			// Если произошла ошибка при запросе к базе данных, вернуть статус 500 и сообщение об ошибке
+			console.error('Ошибка при получении мастеров:', error);
+			res.status(500).json({ error: 'Произошла ошибка при получении мастеров' });
+		}
+	}
 
 	async onDateAndTime(req, res) {
 		const { cityId, date, time, duration } = req.body;
@@ -43,7 +69,6 @@ class MasterController {
 			console.log('filteredMasters', filteredMasters);
 			res.json(filteredMasters);
 		}		
-		
     }
 
     async create(req, res) {
@@ -63,19 +88,11 @@ class MasterController {
 		}
     }
 
-    async delete(req, res) {
-        const masterName = req.params.name;
-		console.log('masterName ',masterName)
-		try {
-			// Находим идентификатор мастера на основе имени
-			const master = await db.query('SELECT id FROM masters WHERE name = $1', [masterName]);
-			console.log('master ',master.rows.length)
-			if (master.rows.length === 0) {
-				return res.sendStatus(404);
-			}
-
-			const masterId = master.rows[0].id;			
-			console.log(masterId)
+    async delete(req, res) {        
+		const masterId = req.params.id;
+		console.log('masterId', masterId);
+		
+		try {			
 			const orders = await db.query('SELECT * FROM orders WHERE master_id = $1', [masterId]);
 			
 			if (orders.rows.length > 0) {
