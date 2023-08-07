@@ -37,25 +37,25 @@ class CityController {
 	async update(req, res) {
     const { cityId, newTitle } = req.body;
     
-    try {
-        // Сначала получаем город по city_id
-        const city = await db.query('SELECT * FROM cities WHERE id = $1', [cityId]);
-        
-        // Проверяем, существует ли город с таким id
-        if (city.rows.length === 0) {
-            return res.status(404).json({ error: 'Resource not found' });
-        }
+		try {
+			// Сначала получаем город по city_id
+			const city = await db.query('SELECT * FROM cities WHERE id = $1', [cityId]);
+			
+			// Проверяем, существует ли город с таким id
+			if (city.rows.length === 0) {
+				return res.status(404).json({ error: 'Resource not found' });
+			}
 
-        // Обновляем название города
-        const updatedCity = await db.query('UPDATE cities SET title = $1 WHERE id = $2 RETURNING *', [newTitle, cityId]);
-        
-        // Отправляем обновленный город в ответе
-        res.json(updatedCity.rows[0]);
-    } catch (error) {
-        console.error('Error updating city:', error.message);
-        res.status(500).json({ error: 'An error occurred while updating the city.' });
-    }
-}
+			// Обновляем название города
+			const updatedCity = await db.query('UPDATE cities SET title = $1 WHERE id = $2 RETURNING *', [newTitle, cityId]);
+			
+			// Отправляем обновленный город в ответе
+			res.json(updatedCity.rows[0]);
+		} catch (error) {
+			console.error('Error updating city:', error.message);
+			res.status(500).json({ error: 'An error occurred while updating the city.' });
+		}
+	}
 
 }
 

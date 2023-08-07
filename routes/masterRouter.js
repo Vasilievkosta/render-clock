@@ -8,6 +8,7 @@ router.get('/ofcities', authMiddleware, masterController.getMasterOfCities);
 router.post('/datetime', masterController.onDateAndTime);
 router.post('/create', masterController.create);
 router.delete('/delete/:id', masterController.delete);
+router.put('/update', masterController.update);
 
 
 

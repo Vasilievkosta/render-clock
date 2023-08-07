@@ -45,6 +45,27 @@ class UserController {
 			res.status(200).send();
 		}
     }
+	
+	async update(req, res) {
+	const { id, userName, email } = req.body;
+
+		try {
+			// Проверяем, существует ли пользователь с указанным id
+			const user = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+			if (user.rows.length === 0) {
+			return res.status(404).json({ error: 'User not found' });
+			}
+
+			// Обновляем имя пользователя и адрес электронной почты
+			const updatedUser = await db.query('UPDATE users SET userName = $1, email = $2 WHERE id = $3 RETURNING *', [userName, email, id]);
+
+			// Отправляем обновленного пользователя в ответе
+			res.json(updatedUser.rows[0]);
+		} catch (error) {
+			console.error('Error updating user:', error);
+			res.status(500).json({ error: 'An error occurred while updating the user.' });
+		}
+	}
 }
 
 module.exports = new UserController();

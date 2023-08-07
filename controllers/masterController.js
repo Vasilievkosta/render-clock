@@ -116,6 +116,29 @@ class MasterController {
 			res.sendStatus(500);
 		}    
     }
+	
+	async update(req, res) {
+    const { masterId, newName } = req.body;
+    
+		try {
+			// Сначала получаем мастера по masterId
+			const master = await db.query('SELECT * FROM masters WHERE id = $1', [masterId]);
+			
+			// Проверяем, существует ли мастер с таким id
+			if (master.rows.length === 0) {
+				return res.status(404).json({ error: 'Resource not found' });
+			}
+
+			// Обновляем имя мастера
+			const updatedMaster = await db.query('UPDATE masters SET name = $1 WHERE id = $2 RETURNING *', [newName, masterId]);
+			
+			// Отправляем обновленного мастера в ответе
+			res.json(updatedMaster.rows[0]);
+		} catch (error) {
+			console.error('Error updating city:', error.message);
+			res.status(500).json({ error: 'An error occurred while updating the master.' });
+		}
+	}
 }
 
 module.exports = new MasterController();
