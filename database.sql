@@ -1,6 +1,13 @@
+create TABLE ratings(
+	id SERIAL PRIMARY KEY,
+	rating INTEGER NOT NULL	
+);
+
 create TABLE masters(
 	id SERIAL PRIMARY KEY,
-	name VARCHAR(255) NOT NULL
+	name VARCHAR(255) NOT NULL,
+	rating_id INTEGER,
+	FOREIGN KEY (rating_id) REFERENCES ratings (id)
 );
 
 create TABLE cities(
@@ -33,10 +40,3 @@ create TABLE orders(
 	FOREIGN KEY (user_id) REFERENCES users (id),
 	FOREIGN KEY (master_id) REFERENCES masters (id)
 );
-
---вывод всех заказов
-SELECT o.date, o.time, u.userName AS user_name, m.name AS master_name, c.title AS city_name
-FROM orders o
-JOIN users u ON o.user_id = u.id
-JOIN masters m ON o.master_id = m.id
-JOIN cities c ON u.city_id = c.id;
