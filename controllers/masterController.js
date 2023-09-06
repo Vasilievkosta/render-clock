@@ -28,15 +28,15 @@ class MasterController {
     async getMasterOfCities(req, res) {
         try {
             const masters = await db.query(`
-    SELECT m.id AS master_id, m.name AS master_name, 
-        r.id AS rating_id, r.rating AS master_rating,
-        json_agg(json_build_object('id', c.id, 'title', c.title)) AS cities
-    FROM masters m
-    JOIN master_cities mc ON m.id = mc.master_id
-    JOIN cities c ON mc.city_id = c.id
-    LEFT JOIN ratings r ON m.rating_id = r.id
-    GROUP BY m.id, m.name, r.id, r.rating;
-`)
+		SELECT m.id AS master_id, m.name AS master_name, 
+			r.id AS rating_id, r.rating AS master_rating,
+			json_agg(json_build_object('id', c.id, 'title', c.title)) AS cities
+		FROM masters m
+		JOIN master_cities mc ON m.id = mc.master_id
+		JOIN cities c ON mc.city_id = c.id
+		LEFT JOIN ratings r ON m.rating_id = r.id
+		GROUP BY m.id, m.name, r.id, r.rating;
+		`)
 
             if (masters.rows.length === 0) {
                 // Если мастерa не найдены, вернуть статус 404 и сообщение об ошибке
@@ -62,8 +62,7 @@ class MasterController {
             'SELECT m.* FROM masters m JOIN master_cities mc ON mc.master_id = m.id JOIN cities c ON c.id = mc.city_id WHERE c.id = $1',
             [cityId]
         )
-
-        console.log(cityId, date, time, duration)
+        
         // все заказы на определенную дату
         const ordersByDate = await db.query(
             'SELECT o.id, o.date, o.time, o.duration, u.userName AS user_name, m.name AS master_name, c.title AS city_name FROM orders o JOIN users u ON o.user_id = u.id JOIN masters m ON o.master_id = m.id JOIN cities c ON u.city_id = c.id WHERE o.date = $1;',

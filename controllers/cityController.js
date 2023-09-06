@@ -2,8 +2,7 @@ const db = require('../db')
 
 class CityController {
     async getAll(req, res) {
-        const cities = await db.query('SELECT * FROM cities')
-        console.log('get cities')
+        const cities = await db.query('SELECT * FROM cities')        
         res.json(cities.rows)
     }
 
