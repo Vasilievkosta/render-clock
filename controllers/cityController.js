@@ -1,21 +1,16 @@
 const db = require('../db')
+const {body, validationResult} = require('express-validator')
 
 class CityController {
     async getAll(req, res) {
-        const cities = await db.query('SELECT * FROM cities')        
+        const cities = await db.query('SELECT * FROM cities')      
         res.json(cities.rows)
     }
 
     async create(req, res) {
-        const { title } = req.body
-
-        if (!title) {
-            return res.status(400).json({ error: 'Invalid request data. Please provide required field.' })
-        }
-
+        const { title } = req.body	
+		
         const city = await db.query('INSERT INTO cities (title) values ($1) RETURNING *', [title])
-        console.log('create', city.rows)
-        if (!req.body) return res.sendStatus(400)
         res.json(city.rows)
     }
 

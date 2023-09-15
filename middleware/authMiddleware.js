@@ -11,8 +11,7 @@ module.exports = function (req, res, next) {
 
         if (authorizationHeader && authorizationHeader.startsWith('Bearer ')) {
             const token = authorizationHeader.split(' ')[1]
-
-            // here you can check the token
+            
             const decoderToken = jwt.verify(token, 'SECRET_KEY')
 
             next()

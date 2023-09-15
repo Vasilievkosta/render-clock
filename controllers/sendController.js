@@ -20,7 +20,12 @@ transporter.verify((error) => {
 
 class SendController {
     sendLetter(req, res) {
-		const { userName, email, date, time } = req.body    
+		const { userName, email, date, time } = req.body
+		
+		if (!userName || !email || !date || !time) {
+            return res.status(400).json({ error: 'Invalid request data. Please provide all required fields.' })
+        }
+		
 		const mail = {
 			from: '"Great 😃👨‍👩‍👦‍👦" <foo@example.com>',
 			to: `${email}`,

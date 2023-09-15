@@ -9,32 +9,27 @@ class UserController {
     }
 
     async getUser(req, res) {
-        const email = req.params.email
+        const email = req.params.email		
+		
         const existingUser = await db.query('SELECT * FROM users WHERE email = $1', [email])
 
-        if (existingUser.rows.length > 0) {
-            console.log('User already exists:', existingUser.rows[0])
+        if (existingUser.rows.length > 0) {            
             res.json(existingUser.rows[0])
         } else {
             console.log('User not found')
             res.json(null)
-        }
+        }		
     }
 
     async create(req, res) {
-        const { userName, email, city_id } = req.body
-
-        if (!userName || !email || !city_id) {
-            return res.status(400).json({ error: 'Invalid request data. Please provide all required fields.' })
-        }
+        const { userName, email, city_id } = req.body        
 
         const users = await db.query('INSERT INTO users (userName, email, city_id) values ($1, $2, $3) RETURNING *', [
             userName,
             email,
             city_id,
         ])
-        console.log('create', users.rows)
-        if (!req.body) return res.sendStatus(400)
+        
         res.json(users.rows)
     }
 
@@ -51,14 +46,11 @@ class UserController {
             console.log('Deleted user:', deletedUser.rows[0])
             res.status(200).send()
         }
+		
     }
 
     async update(req, res) {
-        const { id, userName, email, city_id } = req.body
-
-        if (!id || !userName || !email || !city_id) {
-            return res.status(400).json({ error: 'Invalid request data. Please provide all required fields.' })
-        }
+        const { id, userName, email, city_id } = req.body        
 
         try {
             // Проверяем, существует ли пользователь с указанным id
@@ -72,14 +64,37 @@ class UserController {
                 'UPDATE users SET userName = $1, email = $2, city_id = $3 WHERE id = $4 RETURNING *',
                 [userName, email, city_id, id]
             )
-
-            // Отправляем обновленного пользователя в ответе
-            res.json(updatedUser.rows[0])
+            
+            res.json(updatedUser.rows[0])			
+			
         } catch (error) {
             console.error('Error updating user:', error)
             res.status(500).json({ error: 'An error occurred while updating the user.' })
         }
     }
+	
+	async patchUserName(req, res) {
+		const { id, userName } = req.body;	
+
+		try {			
+			const user = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+
+			if (user.rows.length === 0) {
+				return res.status(404).json({ error: 'User not found' });
+			}
+			
+			const updatedUserName = await db.query(
+				'UPDATE users SET userName = $1 WHERE id = $2 RETURNING *',
+				[userName, id]
+			);			
+			
+			res.json(updatedUserName.rows[0]);
+			
+		} catch (error) {
+			console.error('Error updating user name:', error);
+			res.status(500).json({ error: 'An error occurred while updating the user name.' });
+		}
+	}
 }
 
 module.exports = new UserController()

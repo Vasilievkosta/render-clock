@@ -5,8 +5,6 @@ const jwt = require('jsonwebtoken')
 const db = require('./db')
 const router = require('./routes/appRouter')
 
-// console.log(JSON.stringify(process.env))
-
 const PORT = process.env.PORT || 5000
 
 const app = express()
@@ -29,15 +27,11 @@ app.get('/', (req, res) => {
     res.send('start !')
 })
 
-app.post('/auth', function async(req, res) {
-    // console.log(req.body);
+app.post('/auth', function async(req, res) {   
     const { email, password } = req.body
+	
     let valid = req.body.password === process.env.ADMIN_PASSWORD && req.body.email === process.env.ADMIN_EMAIL
-
-    if (valid) {
-        // res.setHeader('Authorization', `Bearer ${token}`);
-        //res.header('x-auth-token', token);
-    }
+    
     const token = generateAccessToken(email, password)
 
     let data = { data: valid, token: token }
