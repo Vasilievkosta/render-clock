@@ -27,11 +27,11 @@ app.get('/', (req, res) => {
     res.send('start !')
 })
 
-app.post('/auth', function async(req, res) {   
+app.post('/auth', function async(req, res) {
     const { email, password } = req.body
-	
+
     let valid = req.body.password === process.env.ADMIN_PASSWORD && req.body.email === process.env.ADMIN_EMAIL
-    
+
     const token = generateAccessToken(email, password)
 
     let data = { data: valid, token: token }
@@ -42,7 +42,6 @@ app.post('/auth', function async(req, res) {
 
 app.get('/logout', (req, res) => {
     console.log('logout')
-
     res.send('logout')
 })
 

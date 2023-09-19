@@ -42,15 +42,12 @@ class OrderController {
         try {
             const { date, time, duration, user_id, master_id } = req.body
 
-            if (!date || !time || !duration || !user_id || !master_id) {
-                return res.status(400).json({ error: 'Invalid request data. Please provide all required fields.' })
-            }
-
             const orders = await db.query(
                 'INSERT INTO orders (date, time, duration, user_id, master_id) values ($1, $2, $3, $4, $5) RETURNING *',
                 [date, time, duration, user_id, master_id]
             )
             res.json(orders.rows)
+			
         } catch (error) {
             console.error('Error creating order:', error.message)
             res.status(500).json({ error: 'An error occurred while creating the order.' })
@@ -59,25 +56,22 @@ class OrderController {
 	
 	async update(req, res) {
 		try {
-			const { orderId, date, time, duration, user_id, master_id } = req.body;
-
-			if (!orderId || !date || !time || !duration || !user_id || !master_id) {
-				return res.status(400).json({ error: 'Invalid request data. Please provide all required fields.' });
-			}
+			const { orderId, date, time, duration, user_id, master_id } = req.body			
 
 			const updatedOrder = await db.query(
 				'UPDATE orders SET date = $1, time = $2, duration = $3, user_id = $4, master_id = $5 WHERE id = $6 RETURNING *',
 				[date, time, duration, user_id, master_id, orderId]
-			);
+			)
 
 			if (updatedOrder.rows.length === 0) {
-				return res.status(404).json({ error: 'Order not found.' });
+				return res.status(404).json({ error: 'Order not found.' })
 			}
 
-			res.json(updatedOrder.rows[0]);
+			res.json(updatedOrder.rows[0])
+						
 		} catch (error) {
-			console.error('Error updating order:', error.message);
-			res.status(500).json({ error: 'An error occurred while updating the order.' });
+			console.error('Error updating order:', error.message)
+			res.status(500).json({ error: 'An error occurred while updating the order.' })
 		}
 	}
 
@@ -85,13 +79,18 @@ class OrderController {
     async delete(req, res) {
         const id = req.params.id
 
-        const deleteOrder = await db.query('DELETE FROM orders WHERE id = $1 RETURNING *', [id])
-        if (deleteOrder.rows.length === 0) {
-            return res.status(404).json({ error: 'Order not found.' })
-        }
+        try {
+			const deleteOrder = await db.query('DELETE FROM orders WHERE id = $1 RETURNING *', [id])
+			if (deleteOrder.rows.length === 0) {
+				return res.status(404).json({ error: 'Order not found.' })
+			}
 
-        console.log('Deleted order:', deleteOrder.rows[0])
         res.json(deleteOrder.rows[0])
+		
+		} catch (error) {
+			console.error('Error deleting order:', error.message)
+			res.status(500).json({ error: 'An error occurred while deleting the order.' })
+		}
     }
 }
 

@@ -25,7 +25,7 @@ create TABLE master_cities(
 create TABLE users(
 	id SERIAL PRIMARY KEY,
 	userName VARCHAR(30),
-	email VARCHAR(30),	
+	email VARCHAR(50),	
 	city_id INTEGER,
 	FOREIGN KEY (city_id) REFERENCES cities (id)
 );
