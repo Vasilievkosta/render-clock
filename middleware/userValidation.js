@@ -7,20 +7,11 @@ exports.createUserValidation = [
     body('city_id').isInt(),
 ]
 
-exports.getOneUserValidation = [
-    param('email').isEmail(),
-]
-
 exports.updateUserValidation = [
 	body('id').isInt(),
     assemblyValidators.validateName('userName'),
     assemblyValidators.validateEmail,
     body('city_id').isInt(),
-]
-
-exports.patchUserValidation = [
-	body('id').isInt(),
-    assemblyValidators.validateName('userName'),
 ]
 
 exports.deleteUserValidation = [

@@ -18,8 +18,7 @@ transporter.verify((error) => {
 })
 
 class SendController {
-    sendLetter(req, res) {
-        const { userName, email, date, time } = req.body
+    sendLetter(userName, email, date, time) {        
 
         const mail = {
             from: '"Great 😃👨‍👩‍👦‍👦" <foo@example.com>',
@@ -39,20 +38,10 @@ class SendController {
 				`,
         }
 
-        transporter.sendMail(mail, (error) => {
+        transporter.sendMail(mail, (error) => {			
             if (error) {
                 console.error('Error sending email:', error.message)
-                res.status(500).json({
-                    status: 'ERROR',
-                    message: 'Failed to send the email.',
-                    error: error.message,
-                })
-            } else {
-                res.json({
-                    status: 'Message Sent',
-                    message: 'Email sent successfully.',
-                })
-            }
+            } 
         })
     }
 }

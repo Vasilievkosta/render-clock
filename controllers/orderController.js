@@ -1,4 +1,5 @@
 const db = require('../db')
+const sendController = require('../controllers/sendController')
 
 class OrderController {
     async getAll(req, res) {
@@ -36,19 +37,24 @@ class OrderController {
 			console.error('Error fetching orders:', error.message)
 			res.status(500).json({ error: 'An error occurred while fetching orders.' })
 		}
-    }
-
-    async create(req, res) {
+    }    
+	
+	async createAndSend(req, res) {
         try {
-            const { date, time, duration, user_id, master_id } = req.body
-
-            const orders = await db.query(
+            const { date, time, duration, user_id, master_id, userName, email } = req.body
+			            
+			const orders = await db.query(
                 'INSERT INTO orders (date, time, duration, user_id, master_id) values ($1, $2, $3, $4, $5) RETURNING *',
                 [date, time, duration, user_id, master_id]
             )			
+			if (orders.rows.length > 0) {
+				
+				sendController.sendLetter(userName, email, date, time)				
+				res.json({ status: 'Success', order: orders.rows[0] })
 			
-			res.json(orders.rows)
-			
+			} else {
+				res.status(500).json({ error: 'An error occurred while creating the order.' });
+			}		
 			
         } catch (error) {
             console.error('Error creating order:', error.message)

@@ -1,12 +1,14 @@
 const { body, param } = require('express-validator')
 const assemblyValidators = require('../middleware/assemblyValidators')
 
-exports.createOrderValidation = [
+exports.createAndSendOrderValidation = [
 	assemblyValidators.validateDate,
 	assemblyValidators.validateTime,
 	assemblyValidators.validateDuration,
 	body('user_id').isInt(),
-	body('master_id').isInt(),
+	body('master_id').isInt(),	
+	assemblyValidators.validateName('userName'),
+    assemblyValidators.validateEmail,	
 ]
 
 exports.updateOrderValidation = [

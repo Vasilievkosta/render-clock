@@ -20,10 +20,9 @@ const validateTime = body('time')
 		}
 		
 		const inputDate = req.body.date		
-		const serverDate = new Date().toISOString().split('T')[0]
+		const serverDate = new Date().toISOString().split('T')[0]		
 		
-		
-		if (inputDate === serverDate && intValue <= intNowTime + 3) {
+		if (inputDate === serverDate && intValue <= intNowTime + 3) { 
 			throw new Error('Время не может быть прошедшим, если дата - сегодня.');
 		}
 		
