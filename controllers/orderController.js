@@ -46,7 +46,19 @@ class OrderController {
                 'INSERT INTO orders (date, time, duration, user_id, master_id) values ($1, $2, $3, $4, $5) RETURNING *',
                 [date, time, duration, user_id, master_id]
             )
-            res.json('orders.rows')
+			
+			const serverTimezone = new Date().getTimezoneOffset()
+			const serverDate = new Date().toISOString().split('T')[0]
+			const serverDateFull = new Date().toISOString()
+			
+			const options = { hour12: false }		
+			const nowTime = new Date().toLocaleTimeString(undefined, options)
+		
+			
+			
+            res.json({serverTimezone,serverDate, serverDateFull, nowTime})
+			// res.json(orders.rows)
+			
 			
         } catch (error) {
             console.error('Error creating order:', error.message)
