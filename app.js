@@ -28,16 +28,16 @@ app.get('/', (req, res) => {
 })
 
 app.post('/auth', function async(req, res) {
+    if (!req.body.email || !req.body.password) {
+        return res.sendStatus(400)
+    }
     const { email, password } = req.body
 
     let valid = req.body.password === process.env.ADMIN_PASSWORD && req.body.email === process.env.ADMIN_EMAIL
 
     const token = generateAccessToken(email, password)
 
-    let data = { data: valid, token: token }
-
-    if (!req.body) return res.sendStatus(400)
-    res.json(data)
+    res.json({ data: valid, token: token })
 })
 
 app.get('/logout', (req, res) => {

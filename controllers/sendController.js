@@ -41,6 +41,7 @@ class SendController {
 
         transporter.sendMail(mail, (error) => {
             if (error) {
+                console.error('Error sending email:', error.message)
                 res.status(500).json({
                     status: 'ERROR',
                     message: 'Failed to send the email.',

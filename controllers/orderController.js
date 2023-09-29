@@ -46,7 +46,7 @@ class OrderController {
                 'INSERT INTO orders (date, time, duration, user_id, master_id) values ($1, $2, $3, $4, $5) RETURNING *',
                 [date, time, duration, user_id, master_id]
             )
-            res.json(orders.rows)
+            res.json('orders.rows')
 			
         } catch (error) {
             console.error('Error creating order:', error.message)
