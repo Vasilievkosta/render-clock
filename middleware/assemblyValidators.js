@@ -20,13 +20,14 @@ const validateTime = body('time')
 		}
 		
 		const inputDate = req.body.date		
-		const serverDate = new Date().toISOString().split('T')[0]	
+		const serverDate = new Date().toISOString().split('T')[0]
 		
-		if (inputDate === serverDate && intValue <= intNowTime) {
+		
+		if (inputDate === serverDate && intValue <= intNowTime + 3) {
 			throw new Error('Время не может быть прошедшим, если дата - сегодня.');
 		}
 		
-		return true		
+		return true
     })
 
 const validateEmail = body('email').isEmail().isLength({max: 50})
@@ -38,7 +39,8 @@ const validateDate = body('date')
 	.custom((value) => {		
 		const inputDate = new Date(value).toISOString().split('T')[0]
 		const serverDate = new Date().toISOString().split('T')[0]
-		    
+		
+		
 		if (inputDate < serverDate) {
 			throw new Error('Дата не может быть в прошлом.');
 		}
