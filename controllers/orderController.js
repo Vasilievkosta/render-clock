@@ -105,7 +105,7 @@ class OrderController {
         try {
 			const options = { hour12: false }			
 		    const serverTimezone = new Date().getTimezoneOffset()
-			const delta = new Date().setMinutes(-180 + new Date().getMinutes())
+			const delta = new Date().setMinutes(180 + new Date().getMinutes())
 			
             const toLocaleTimeString = new Date().toLocaleTimeString()
 			const toLocaleTimeStringOptions = new Date().toLocaleTimeString(undefined, options)
@@ -121,8 +121,9 @@ class OrderController {
 				
 				'toLocaleTimeString': toLocaleTimeString,
 				'toLocaleTimeStringOptions': toLocaleTimeStringOptions,
-				'newDate': newDate,
+				'toDeltaTimeString': toDeltaTimeString,
 				
+				'newDate': newDate,				
 				'deltaDate': deltaDate,
 				'serverDate': serverDate
 			}
