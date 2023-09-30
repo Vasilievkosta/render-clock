@@ -1,9 +1,12 @@
 const { body } = require('express-validator')
 
+const deltaDate = new Date().setMinutes(180 + new Date().getMinutes())
+const serverDate = new Date(deltaDate).toISOString().split('T')[0]
+
 const validateTime = body('time')
 	.custom((value, {req}) => {		
 		const options = { hour12: false }		
-		const nowTime = new Date().toLocaleTimeString(undefined, options).split(':')[0]
+		const nowTime = new Date(deltaDate).toLocaleTimeString(undefined, options).split(':')[0]
 		
 		const intValue = parseInt(value, 10)
 		const intNowTime = parseInt(nowTime, 10)
@@ -17,13 +20,12 @@ const validateTime = body('time')
 		}
 		if (!/^(0|[1-9]\d*)$/.test(value)) {
 			throw new Error('Time must be a string representing a non-negative integer.')
-		}
+		}		
 		
-		const inputDate = req.body.date		
-		const serverDate = new Date().toISOString().split('T')[0]		
+		const inputDate = req.body.date
 		
-		if (inputDate === serverDate && intValue <= intNowTime + 3) { 
-			throw new Error('Время не может быть прошедшим, если дата - сегодня.');
+		if (inputDate === serverDate && intValue <= intNowTime) { 
+			throw new Error('Время не может быть прошедшим, если дата - сегодня.')
 		}
 		
 		return true
@@ -35,13 +37,9 @@ const validateEmail = body('email').isEmail().isLength({max: 50})
 const validateDate = body('date')
 	.isISO8601()
 	.withMessage('Неверный формат даты. Используйте формат "YYYY-MM-DD".')
-	.custom((value) => {
+	.custom((value) => {		
 		
-		const deltaDate = new Date().setMinutes(180 + new Date().getMinutes())		
-		
-		const inputDate = new Date(value).toISOString().split('T')[0]
-		const serverDate = new Date(deltaDate).toISOString().split('T')[0]
-		
+		const inputDate = new Date(value).toISOString().split('T')[0]		
 		
 		if (inputDate < serverDate) {
 			throw new Error('Дата не может быть в прошлом.');
