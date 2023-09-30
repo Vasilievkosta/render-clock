@@ -6,13 +6,13 @@ const authMiddleware = require('../middleware/authMiddleware')
 const validatorMiddleware = require('../middleware/validatorMiddleware')
 const userValidation = require('../middleware/userValidation')
 
-router.get('/admin', authMiddleware, userController.getAll)
+router.get('/', authMiddleware, userController.getAll)
 
 router.post('/create', userValidation.createUserValidation, validatorMiddleware, userController.create)
 
-router.delete('/delete/:id', userValidation.deleteUserValidation, validatorMiddleware, userController.delete)
+router.delete('/delete/:id', authMiddleware, userValidation.deleteUserValidation, validatorMiddleware, userController.delete)
 
-router.put('/update', userValidation.updateUserValidation, validatorMiddleware, userController.update)
+router.put('/update', authMiddleware, userValidation.updateUserValidation, validatorMiddleware, userController.update)
 
 
 module.exports = router

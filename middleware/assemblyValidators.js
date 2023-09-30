@@ -35,9 +35,12 @@ const validateEmail = body('email').isEmail().isLength({max: 50})
 const validateDate = body('date')
 	.isISO8601()
 	.withMessage('Неверный формат даты. Используйте формат "YYYY-MM-DD".')
-	.custom((value) => {		
+	.custom((value) => {
+		
+		const deltaDate = new Date().setMinutes(180 + new Date().getMinutes())		
+		
 		const inputDate = new Date(value).toISOString().split('T')[0]
-		const serverDate = new Date().toISOString().split('T')[0]
+		const serverDate = new Date(deltaDate).toISOString().split('T')[0]
 		
 		
 		if (inputDate < serverDate) {

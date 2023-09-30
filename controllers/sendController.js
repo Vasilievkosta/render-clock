@@ -18,7 +18,7 @@ transporter.verify((error) => {
 })
 
 class SendController {
-    sendLetter(userName, email, date, time) {        
+    sendLetter(userName, email, date, time) {   
 
         const mail = {
             from: '"Great 😃👨‍👩‍👦‍👦" <foo@example.com>',

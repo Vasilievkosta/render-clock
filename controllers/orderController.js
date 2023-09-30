@@ -51,11 +51,11 @@ class OrderController {
 				
 				sendController.sendLetter(userName, email, date, time)				
 				res.json({ status: 'Success', order: orders.rows[0] })
-			
-			} else {
+			}			
+			 else {
 				res.status(500).json({ error: 'An error occurred while creating the order.' });
 			}		
-			
+			// res.json({ status: 'Success'})
         } catch (error) {
             console.error('Error creating order:', error.message)
             res.status(500).json({ error: 'An error occurred while creating the order.' })
@@ -99,6 +99,31 @@ class OrderController {
 			console.error('Error deleting order:', error.message)
 			res.status(500).json({ error: 'An error occurred while deleting the order.' })
 		}
+    }
+	
+	async getTimeZone(req, res) {
+        try {
+            const serverTimezone = new Date().getTimezoneOffset()
+            const toLocaleTimeString = new Date().toLocaleTimeString()
+			const newDate = new Date()
+			const delta = new Date().setMinutes(-serverTimezone + new Date().getMinutes())
+			const deltaDate = new Date(delta).toISOString()
+			const serverDate = new Date().toISOString()
+			
+			const data = {
+				'serverTimezone':serverTimezone,
+				'toLocaleTimeString': toLocaleTimeString,
+				'newDate': newDate,
+				'delta': delta,
+				'deltaDate': deltaDate,
+				'serverDate': serverDate
+			}
+			
+			res.json(data)
+        } catch (error) {
+            console.error('Error fetching serverTimezone:', error.message)
+            res.status(500).json({ error: 'An error occurred while fetching serverTimezone.' })
+        }
     }
 }
 
