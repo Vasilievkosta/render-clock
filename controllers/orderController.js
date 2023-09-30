@@ -103,18 +103,26 @@ class OrderController {
 	
 	async getTimeZone(req, res) {
         try {
-            const serverTimezone = new Date().getTimezoneOffset()
+			const options = { hour12: false }			
+		    const serverTimezone = new Date().getTimezoneOffset()
+			const delta = new Date().setMinutes(-180 + new Date().getMinutes())
+			
             const toLocaleTimeString = new Date().toLocaleTimeString()
-			const newDate = new Date()
-			const delta = new Date().setMinutes(-serverTimezone + new Date().getMinutes())
+			const toLocaleTimeStringOptions = new Date().toLocaleTimeString(undefined, options)
+			const toDeltaTimeString = new Date(delta).toLocaleTimeString(undefined, options)
+			
+			const newDate = new Date()			
 			const deltaDate = new Date(delta).toISOString()
 			const serverDate = new Date().toISOString()
 			
 			const data = {
 				'serverTimezone':serverTimezone,
-				'toLocaleTimeString': toLocaleTimeString,
-				'newDate': newDate,
 				'delta': delta,
+				
+				'toLocaleTimeString': toLocaleTimeString,
+				'toLocaleTimeStringOptions': toLocaleTimeStringOptions,
+				'newDate': newDate,
+				
 				'deltaDate': deltaDate,
 				'serverDate': serverDate
 			}
