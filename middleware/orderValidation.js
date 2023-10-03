@@ -5,7 +5,7 @@ exports.createAndSendOrderValidation = [
 	assemblyValidators.validateDate,
 	assemblyValidators.validateTime,
 	assemblyValidators.validateDuration,
-	body('user_id').isInt(),
+	body('city_id').isInt(),
 	body('master_id').isInt(),	
 	assemblyValidators.validateName('userName'),
     assemblyValidators.validateEmail,	

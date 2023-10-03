@@ -8,8 +8,6 @@ const userValidation = require('../middleware/userValidation')
 
 router.get('/', authMiddleware, userController.getAll)
 
-router.post('/create', userValidation.createUserValidation, validatorMiddleware, userController.create)
-
 router.delete('/delete/:id', authMiddleware, userValidation.deleteUserValidation, validatorMiddleware, userController.delete)
 
 router.put('/update', authMiddleware, userValidation.updateUserValidation, validatorMiddleware, userController.update)

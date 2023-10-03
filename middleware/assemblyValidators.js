@@ -6,7 +6,7 @@ const serverDate = new Date(deltaDate).toISOString().split('T')[0]
 const validateTime = body('time')
 	.custom((value, {req}) => {		
 		const options = { hour12: false }		
-		const nowTime = new Date(deltaDate).toLocaleTimeString(undefined, options).split(':')[0]
+		const nowTime = new Date().toLocaleTimeString(undefined, options).split(':')[0]
 		
 		const intValue = parseInt(value, 10)
 		const intNowTime = parseInt(nowTime, 10)
@@ -23,6 +23,7 @@ const validateTime = body('time')
 		}		
 		
 		const inputDate = req.body.date
+		
 		
 		if (inputDate === serverDate && intValue <= intNowTime) { 
 			throw new Error('Время не может быть прошедшим, если дата - сегодня.')

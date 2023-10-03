@@ -1,5 +1,6 @@
 const db = require('../db')
-const sendController = require('../controllers/sendController')
+const sendController = require('./sendController')
+const userController = require('./userController')
 
 class OrderController {
     async getAll(req, res) {
@@ -37,12 +38,31 @@ class OrderController {
 			console.error('Error fetching orders:', error.message)
 			res.status(500).json({ error: 'An error occurred while fetching orders.' })
 		}
-    }    
+    }   
 	
 	async createAndSend(req, res) {
         try {
-            const { date, time, duration, user_id, master_id, userName, email } = req.body
-			            
+            const { date, time, duration, city_id, master_id, userName, email } = req.body
+			
+			let user;
+			
+			const existingUser = await db.query('SELECT * FROM users WHERE email = $1', [email])
+
+			if (existingUser.rows.length > 0) {           
+				user = await db.query(
+					'UPDATE users SET userName = $1, city_id = $2 WHERE email = $3 RETURNING *',
+					[userName, city_id, email]
+				)			
+				
+			} else {            
+				user = await db.query(
+					'INSERT INTO users (userName, email, city_id) VALUES ($1, $2, $3) RETURNING *',
+					[userName, email, city_id]
+				)				
+			}
+			
+			const user_id = user.rows[0].id			
+			
 			const orders = await db.query(
                 'INSERT INTO orders (date, time, duration, user_id, master_id) values ($1, $2, $3, $4, $5) RETURNING *',
                 [date, time, duration, user_id, master_id]
@@ -51,11 +71,12 @@ class OrderController {
 				
 				sendController.sendLetter(userName, email, date, time)				
 				res.json({ status: 'Success', order: orders.rows[0] })
-			}			
+			}
+			
 			 else {
 				res.status(500).json({ error: 'An error occurred while creating the order.' });
 			}		
-			// res.json({ status: 'Success'})
+			
         } catch (error) {
             console.error('Error creating order:', error.message)
             res.status(500).json({ error: 'An error occurred while creating the order.' })
@@ -103,13 +124,15 @@ class OrderController {
 	
 	async getTimeZone(req, res) {
         try {
+			
 			const options = { hour12: false }			
 		    const serverTimezone = new Date().getTimezoneOffset()
-			const delta = new Date().setMinutes(180 + new Date().getMinutes())
+			
+			const delta = new Date().setMinutes((180) + new Date().getMinutes())
 			
             const toLocaleTimeString = new Date().toLocaleTimeString()
 			const toLocaleTimeStringOptions = new Date().toLocaleTimeString(undefined, options)
-			const toDeltaTimeString = new Date(delta).toLocaleTimeString(undefined, options)
+			const nowTime = new Date(delta).toLocaleTimeString(undefined, options).split(':')[0]			
 			
 			const newDate = new Date()			
 			const deltaDate = new Date(delta).toISOString()
@@ -121,7 +144,7 @@ class OrderController {
 				
 				'toLocaleTimeString': toLocaleTimeString,
 				'toLocaleTimeStringOptions': toLocaleTimeStringOptions,
-				'toDeltaTimeString': toDeltaTimeString,
+				'nowTime': nowTime,
 				
 				'newDate': newDate,				
 				'deltaDate': deltaDate,
