@@ -1,15 +1,16 @@
 const { body } = require('express-validator')
 
 const deltaDate = new Date().setMinutes(180 + new Date().getMinutes())
-const serverDate = new Date(deltaDate).toISOString().split('T')[0]
+const serverDate = new Date(deltaDate).toISOString()
+const nowDate = serverDate.split('T')[0]
+const nowTime = serverDate.split('T')[1]
 
 const validateTime = body('time')
-	.custom((value, {req}) => {		
-		const options = { hour12: false }		
-		const nowTime = new Date().toLocaleTimeString(undefined, options).split(':')[0]
+	.custom((value, {req}) => {			
+		const nowHour = nowTime.split(':')[0]		
 		
 		const intValue = parseInt(value, 10)
-		const intNowTime = parseInt(nowTime, 10)
+		const intNowHour = parseInt(nowHour, 10)		
 		
 		if (intValue > 23 || intValue < 0) {
 			throw new Error('Значение должно быть в диапазоне от 0 до 23')
@@ -25,7 +26,7 @@ const validateTime = body('time')
 		const inputDate = req.body.date
 		
 		
-		if (inputDate === serverDate && intValue <= intNowTime) { 
+		if (inputDate === nowDate && intValue <= intNowHour) { 
 			throw new Error('Время не может быть прошедшим, если дата - сегодня.')
 		}
 		
@@ -42,7 +43,7 @@ const validateDate = body('date')
 		
 		const inputDate = new Date(value).toISOString().split('T')[0]		
 		
-		if (inputDate < serverDate) {
+		if (inputDate < nowDate) {
 			throw new Error('Дата не может быть в прошлом.');
 		}
 		return true
