@@ -14,7 +14,4 @@ router.put('/update',  authMiddleware, orderValidation.updateOrderValidation, va
 
 router.delete('/delete/:id', authMiddleware, orderValidation.deleteOrderValidation, validatorMiddleware, orderController.delete)
 
-
-router.get('/timezone', orderController.getTimeZone)
-
 module.exports = router

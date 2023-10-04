@@ -120,43 +120,7 @@ class OrderController {
 			console.error('Error deleting order:', error.message)
 			res.status(500).json({ error: 'An error occurred while deleting the order.' })
 		}
-    }
-	
-	async getTimeZone(req, res) {
-        try {
-			
-			const options = { hour12: false }			
-		    const serverTimezone = new Date().getTimezoneOffset()
-			
-			const delta = new Date().setMinutes((180) + new Date().getMinutes())
-			
-            const toLocaleTimeString = new Date().toLocaleTimeString()
-			const toLocaleTimeStringOptions = new Date().toLocaleTimeString(undefined, options)
-			const nowTime = new Date(delta).toLocaleTimeString(undefined, options).split(':')[0]			
-			
-			const newDate = new Date()			
-			const deltaDate = new Date(delta).toISOString()
-			const serverDate = new Date().toISOString()
-			
-			const data = {
-				'serverTimezone':serverTimezone,
-				'delta': delta,
-				
-				'toLocaleTimeString': toLocaleTimeString,
-				'toLocaleTimeStringOptions': toLocaleTimeStringOptions,
-				'nowTime': nowTime,
-				
-				'newDate': newDate,				
-				'deltaDate': deltaDate,
-				'serverDate': serverDate
-			}
-			
-			res.json(data)
-        } catch (error) {
-            console.error('Error fetching serverTimezone:', error.message)
-            res.status(500).json({ error: 'An error occurred while fetching serverTimezone.' })
-        }
-    }
+    }	
 }
 
 module.exports = new OrderController()
