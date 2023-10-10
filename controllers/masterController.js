@@ -47,7 +47,7 @@ class MasterController {
 		GROUP BY m.id, m.name, r.id, r.rating;
 		`)
             if (masters.rows.length === 0) {
-                return res.status(404).json({ error: 'Мастеры не найдены' })
+                return res.status(404).json({ error: 'Мастера не найдены' })
             }
             res.json(masters.rows)
         } catch (error) {

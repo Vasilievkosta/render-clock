@@ -19,7 +19,7 @@ const generateAccessToken = (email, password) => {
         email,
         password,
     }
-    return jwt.sign(payload, 'SECRET_KEY', { expiresIn: '2h' })
+    return jwt.sign(payload, 'SECRET_KEY', { expiresIn: '5h' })
 }
 
 app.get('/', (req, res) => {
