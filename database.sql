@@ -40,3 +40,23 @@ create TABLE orders(
 	FOREIGN KEY (user_id) REFERENCES users (id),
 	FOREIGN KEY (master_id) REFERENCES masters (id)
 );
+
+
+-- fill out the rating table
+INSERT INTO ratings VALUES
+(1, 0), (2, 1), (3, 2), (4, 3), (5, 4), (6, 5);
+
+-- check data in ratings table
+SELECT * FROM ratings;
+
+-- enter data into other tables
+INSERT INTO masters VALUES
+(1, 'Anton', 3), (2, 'Bengalov', 4), (3, 'Clara', 4);
+
+INSERT INTO cities VALUES
+(1, 'Dnepr'), (2, 'Uzhgorod');
+
+INSERT INTO master_cities VALUES
+(1, 1), (2, 1), (3, 2);
+
+-- the users and orders tables are created in the application
