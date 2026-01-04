@@ -1,48 +1,41 @@
-const nodemailer = require('nodemailer')
 require('dotenv').config()
 
-let transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.TRANSPORTER_EMAIL,
-        pass: process.env.TRANSPORTER_PASSWORD,
-    },
-})
-
-transporter.verify((error) => {
-    if (error) {
-        console.log(error)
-    } else {
-        console.log('Ready to Send')
-    }
-})
-
 class SendController {
-    sendLetter(userName, email, date, time) {   
-
+    async sendLetter(userName, email, date, time) {
         const mail = {
-            from: '"Great 😃👨‍👩‍👦‍👦" <foo@example.com>',
-            to: `${email}`,
+            sender: { email: process.env.TRANSPORTER_EMAIL },
+            to: [{ email }],
             subject: 'Hello ✔❤️',
-            html: `
-				<!DOCTYPE html>
-				<html>
-				  <head>
-					
-				  </head>
-				  <body>
-					<b>Hi, ${userName}!)</b>
-					<p>Мы рады. Встретимся ${date} в ${time}.</p>
-				  </body>
-				</html>
-				`,
+            htmlContent: `
+        <!DOCTYPE html>
+        <html>
+          <body>
+            <b>Hi, ${userName}!)</b>
+            <p>Мы рады. Встретимся ${date} в ${time}.</p>
+          </body>
+        </html>
+      `,
         }
 
-        transporter.sendMail(mail, (error) => {			
-            if (error) {
-                console.error('Error sending email:', error.message)
-            } 
-        })
+        try {
+            const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'api-key': process.env.BREVO_API_KEY,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(mail),
+            })
+
+            if (!response.ok) {
+                const errorText = await response.text()
+                console.error('Error sending email:', errorText)
+            } else {
+                console.log('Email sent successfully')
+            }
+        } catch (error) {
+            console.error('Error sending email:', error.message)
+        }
     }
 }
 
