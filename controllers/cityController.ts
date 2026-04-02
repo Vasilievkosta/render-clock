@@ -1,30 +1,31 @@
-const db = require('../db')
+import { Request, Response } from 'express'
+import db from '../db'
 const { body, validationResult } = require('express-validator')
 
 class CityController {
-    async getAll(req, res) {
+    async getAll(req: Request, res: Response): Promise<void> {
         try {
             const cities = await db.query('SELECT * FROM cities')
             res.json(cities.rows)
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('An error occurred while processing the request:', error)
             res.status(500).json({ error: 'An error occurred while processing the request.' })
         }
     }
 
-    async create(req, res) {
+    async create(req: Request, res: Response): Promise<void> {
         const { newTitle } = req.body
 
         try {
             const city = await db.query('INSERT INTO cities (title) values ($1) RETURNING *', [newTitle])
             res.json(city.rows)
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('An error occurred while creating the city:', error)
             res.status(500).json({ error: 'An error occurred while creating the city.' })
         }
     }
 
-    async delete(req, res) {
+    async delete(req: Request, res: Response): Promise<void> {
         const id = req.params.id
 
         try {
@@ -39,13 +40,13 @@ class CityController {
                 await db.query('DELETE FROM cities WHERE id = $1', [id])
                 res.status(200).send()
             }
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error deleting city:', error)
             res.status(500).json({ error: 'An error occurred while deleting the city.' })
         }
     }
 
-    async update(req, res) {
+    async update(req: Request, res: Response): Promise<void> {
         const { cityId, newTitle } = req.body
 
         try {
@@ -60,11 +61,11 @@ class CityController {
                 cityId,
             ])
             res.json(updatedCity.rows[0])
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error updating city:', error.message)
             res.status(500).json({ error: 'An error occurred while updating the city.' })
         }
     }
 }
 
-module.exports = new CityController()
+export default new CityController()

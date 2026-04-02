@@ -4,7 +4,9 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node dist/app.js",
+    "build": "tsc",
+    "dev": "tsx app.ts"
   },
   "engines": {
     "node": ">=16.0.0"
@@ -23,6 +25,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.2"
   }
 }

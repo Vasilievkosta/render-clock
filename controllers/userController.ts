@@ -1,19 +1,20 @@
-const db = require('../db')
+import { Request, Response } from 'express'
+import db from '../db'
 
 class UserController {
-    async getAll(req, res) {
+    async getAll(req: Request, res: Response): Promise<void> {
         try {
             const users = await db.query(
                 'SELECT users.id, users.userName, users.email, users.city_id, cities.title FROM users JOIN cities ON cities.id=users.city_id'
             )
             res.json(users.rows)
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error fetching users:', error.message)
             res.status(500).json({ error: 'An error occurred while fetching users.' })
         }
-    }	
+    }
 
-    async delete(req, res) {
+    async delete(req: Request, res: Response): Promise<void> {
         const id = req.params.id
 
         try {
@@ -26,13 +27,13 @@ class UserController {
                 const deletedUser = await db.query('DELETE FROM users WHERE id = $1 RETURNING *', [id])
                 res.status(200).send()
             }
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error deleting user:', error)
             res.status(500).json({ error: 'An error occurred while deleting the user.' })
         }
     }
 
-    async update(req, res) {
+    async update(req: Request, res: Response): Promise<void> {
         const { id, userName, email, city_id } = req.body
 
         try {
@@ -47,11 +48,11 @@ class UserController {
             )
 
             res.json(updatedUser.rows[0])
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error updating user:', error)
             res.status(500).json({ error: 'An error occurred while updating the user.' })
         }
-    }    
+    }
 }
 
-module.exports = new UserController()
+export default new UserController()

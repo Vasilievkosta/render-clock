@@ -1,9 +1,9 @@
-const express = require('express')
-const cors = require('cors')
-const cookieParser = require('cookie-parser')
-const jwt = require('jsonwebtoken')
-const db = require('./db')
-const router = require('./routes/appRouter')
+import express, { Request, Response } from 'express'
+import cors from 'cors'
+import cookieParser from 'cookie-parser'
+import jwt from 'jsonwebtoken'
+import db from './db' // db.ts должен экспортировать pool через export default
+import appRouter from './routes/appRouter' // уникальное имя вместо router
 
 const PORT = process.env.PORT || 5000
 
@@ -12,9 +12,11 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 app.use(cookieParser())
-app.use('/api', router)
 
-const generateAccessToken = (email, password) => {
+// Подключаем роутер
+app.use('/api', appRouter)
+
+const generateAccessToken = (email: any, password: any): any => {
     const payload = {
         email,
         password,
@@ -22,12 +24,12 @@ const generateAccessToken = (email, password) => {
     return jwt.sign(payload, 'SECRET_KEY', { expiresIn: '5h' })
 }
 
-app.get('/', (req, res) => {
+app.get('/', (req: any, res: any) => {
     console.log('start for Render')
     res.send('start !')
 })
 
-app.post('/auth', function async(req, res) {
+app.post('/auth', function async(req: any, res: any) {
     if (!req.body.email || !req.body.password) {
         return res.sendStatus(400)
     }
@@ -40,16 +42,16 @@ app.post('/auth', function async(req, res) {
     res.json({ data: valid, token: token })
 })
 
-app.get('/logout', (req, res) => {
+app.get('/logout', (req: any, res: any) => {
     console.log('logout')
     res.send('logout')
 })
 
-app.use((req, res) => {
+app.use((req: any, res: any) => {
     res.status(404).send('<h2>404 No Page Found</h2>')
 })
 
-app.listen(PORT, (err) => {
+app.listen(PORT, (err: any) => {
     if (err) {
         return console.log(err)
     }

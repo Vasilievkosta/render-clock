@@ -1,10 +1,11 @@
-const db = require('../db')
+import { Request, Response } from 'express'
+import db from '../db'
 
-function hours(h) {
+function hours(h: string): number {
     return parseInt(h, 10)
 }
 
-function findMasters(startOrder, durationOrder, startMaster, durationMaster) {
+function findMasters(startOrder: string, durationOrder: number, startMaster: string, durationMaster: number): boolean {
     let result =
         hours(startOrder) + durationOrder <= hours(startMaster) ||
         hours(startOrder) >= hours(startMaster) + durationMaster
@@ -12,7 +13,7 @@ function findMasters(startOrder, durationOrder, startMaster, durationMaster) {
 }
 
 class MasterController {
-    async getAll(req, res) {
+    async getAll(req: Request, res: Response): Promise<void> {
         try {
             const masters = await db.query(
                 'SELECT m.name AS master_name, c.title AS city_title FROM masters m JOIN master_cities mc ON m.id = mc.master_id JOIN cities c ON mc.city_id = c.id'
@@ -24,17 +25,17 @@ class MasterController {
         }
     }
 
-    async getRatings(req, res) {
+    async getRatings(req: Request, res: Response): Promise<void> {
         try {
             const ratings = await db.query('SELECT * FROM ratings')
             res.json(ratings.rows)
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error fetching ratings:', error.message)
             res.status(500).json({ error: 'An error occurred while fetching ratings.' })
         }
     }
 
-    async getMasterOfCities(req, res) {
+    async getMasterOfCities(req: Request, res: Response): Promise<void> {
         try {
             const masters = await db.query(`
 		SELECT m.id AS master_id, m.name AS master_name, 
@@ -50,13 +51,13 @@ class MasterController {
                 return res.status(404).json({ error: 'Мастера не найдены' })
             }
             res.json(masters.rows)
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Ошибка при получении мастеров:', error)
             res.status(500).json({ error: 'Произошла ошибка при получении мастеров' })
         }
     }
 
-    async onDateAndTime(req, res) {
+    async onDateAndTime(req: Request, res: Response): Promise<void> {
         const { cityId, date, time, duration } = req.body
 
         try {
@@ -80,13 +81,13 @@ class MasterController {
                 const filteredMasters = masters.rows.filter((obj) => !bizyMasters.includes(obj.name))
                 res.json(filteredMasters)
             }
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('An error occurred while processing the request:', error)
             res.status(500).json({ error: 'An error occurred while processing the request.' })
         }
     }
 
-    async create(req, res) {
+    async create(req: Request, res: Response): Promise<void> {
         const { newName, arr, rating_id } = req.body
 
         try {
@@ -100,13 +101,13 @@ class MasterController {
                 await db.query('INSERT INTO master_cities (master_id, city_id) VALUES ($1, $2)', [masterId, cityId])
             }
             res.json(master.rows)
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('An error occurred while creating the master:', error)
             res.status(500).json({ error: 'An error occurred while creating the master.' })
         }
     }
 
-    async delete(req, res) {
+    async delete(req: Request, res: Response): Promise<void> {
         const masterId = req.params.id
 
         try {
@@ -122,13 +123,13 @@ class MasterController {
 
                 res.sendStatus(204)
             }
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error deleting master:', error)
             res.status(500).json({ error: 'An error occurred while deleting the master.' })
         }
     }
 
-    async update(req, res) {
+    async update(req: Request, res: Response): Promise<void> {
         const { masterId, newName, ratingId, arr } = req.body
 
         try {
@@ -150,11 +151,11 @@ class MasterController {
             )
 
             res.json(updatedMaster.rows[0])
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error updating master:', error.message)
             res.status(500).json({ error: 'An error occurred while updating the master.' })
         }
     }
 }
 
-module.exports = new MasterController()
+export default new MasterController()

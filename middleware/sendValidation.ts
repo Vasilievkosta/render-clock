@@ -1,6 +1,6 @@
-const assemblyValidators = require('../middleware/assemblyValidators')
+import { assemblyValidators } from './assemblyValidators'
 
-exports.sendMailValidation = [
+export const sendMailValidation = [
     assemblyValidators.validateName('userName'),
     assemblyValidators.validateEmail,
     assemblyValidators.validateDate,
