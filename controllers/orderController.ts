@@ -1,116 +1,227 @@
-import db from '../db'
-
+import { Request, Response } from 'express'
+import prisma from '../prismaClient'
 import sendController from './sendController'
 
-class OrderController {
-    async getAll(req, res) {
-        try {
-            const ordersData = await db.query(`
-            SELECT o.id, o.date, o.time, o.duration, u.id AS user_id, u.userName AS user_name, u.email, c.title AS city_title, c.id AS city_id, m.name AS master_name
-            FROM orders o
-            JOIN users u ON o.user_id = u.id
-            JOIN cities c ON u.city_id = c.id
-            JOIN masters m ON o.master_id = m.id
-        `)
+function toNumber(value: unknown): number {
+    return Number(value)
+}
 
-            const formattedOrders = ordersData.rows.map((order) => ({
-                id: order.id,
-                date: order.date,
-                time: order.time,
-                duration: order.duration,
-                user: {
-                    id: order.user_id,
-                    name: order.user_name,
-                    email: order.email,
-                },
-                city: {
-                    id: order.city_id,
-                    title: order.city_title,
-                },
-                master: {
-                    name: order.master_name,
-                },
-            }))
+class OrderController {
+    async getAll(req: Request, res: Response): Promise<void> {
+        try {
+            const [orders, users, cities, masters] = await Promise.all([
+                prisma.order.findMany({
+                    select: {
+                        id: true,
+                        date: true,
+                        time: true,
+                        duration: true,
+                        userId: true,
+                        masterId: true,
+                    },
+                }),
+                prisma.user.findMany({
+                    select: {
+                        id: true,
+                        userName: true,
+                        email: true,
+                        cityId: true,
+                    },
+                }),
+                prisma.city.findMany({
+                    select: {
+                        id: true,
+                        title: true,
+                    },
+                }),
+                prisma.master.findMany({
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                }),
+            ])
+
+            const usersMap = new Map(users.map((user) => [user.id, user]))
+            const citiesMap = new Map(cities.map((city) => [city.id, city]))
+            const mastersMap = new Map(masters.map((master) => [master.id, master]))
+
+            const formattedOrders = orders
+                .filter((order) => {
+                    if (order.userId === null || order.masterId === null) {
+                        return false
+                    }
+
+                    const user = usersMap.get(order.userId)
+                    if (!user || user.cityId === null) {
+                        return false
+                    }
+
+                    return citiesMap.has(user.cityId) && mastersMap.has(order.masterId)
+                })
+                .map((order) => {
+                    const user = usersMap.get(order.userId!)
+                    const city = user?.cityId !== null && user?.cityId !== undefined ? citiesMap.get(user.cityId) : undefined
+                    const master = mastersMap.get(order.masterId!)
+
+                    return {
+                        id: order.id,
+                        date: order.date,
+                        time: order.time,
+                        duration: order.duration,
+                        user: {
+                            id: user!.id,
+                            name: user!.userName,
+                            email: user!.email,
+                        },
+                        city: {
+                            id: city!.id,
+                            title: city!.title,
+                        },
+                        master: {
+                            name: master!.name,
+                        },
+                    }
+                })
 
             res.json(formattedOrders)
-        } catch (error) {
-            console.error('Error fetching orders:', error.message)
+        } catch (error: unknown) {
+            console.error('Error fetching orders:', error)
             res.status(500).json({ error: 'An error occurred while fetching orders.' })
         }
     }
 
-    async createAndSend(req, res) {
+    async createAndSend(req: Request, res: Response): Promise<void> {
         try {
             const { date, time, duration, city_id, master_id, userName, email } = req.body
+            const parsedCityId = toNumber(city_id)
+            const parsedMasterId = toNumber(master_id)
+            const parsedDuration = toNumber(duration)
 
-            let user
+            const order = await prisma.$transaction(async (tx) => {
+                const existingUser = await tx.user.findFirst({
+                    where: {
+                        email,
+                    },
+                })
 
-            const existingUser = await db.query('SELECT * FROM users WHERE email = $1', [email])
+                const user = existingUser
+                    ? await tx.user.update({
+                          where: {
+                              id: existingUser.id,
+                          },
+                          data: {
+                              userName,
+                              cityId: parsedCityId,
+                          },
+                      })
+                    : await tx.user.create({
+                          data: {
+                              userName,
+                              email,
+                              cityId: parsedCityId,
+                          },
+                      })
 
-            if (existingUser.rows.length > 0) {
-                user = await db.query('UPDATE users SET userName = $1, city_id = $2 WHERE email = $3 RETURNING *', [
-                    userName,
-                    city_id,
-                    email,
-                ])
-            } else {
-                user = await db.query('INSERT INTO users (userName, email, city_id) VALUES ($1, $2, $3) RETURNING *', [
-                    userName,
-                    email,
-                    city_id,
-                ])
-            }
+                return tx.order.create({
+                    data: {
+                        date,
+                        time,
+                        duration: parsedDuration,
+                        userId: user.id,
+                        masterId: parsedMasterId,
+                    },
+                })
+            })
 
-            const user_id = user.rows[0].id
-
-            const orders = await db.query(
-                'INSERT INTO orders (date, time, duration, user_id, master_id) values ($1, $2, $3, $4, $5) RETURNING *',
-                [date, time, duration, user_id, master_id]
-            )
-            if (orders.rows.length > 0) {
-                sendController.sendLetter(userName, email, date, time)
-                res.json({ status: 'Success', order: orders.rows[0] })
-            } else {
-                res.status(500).json({ error: 'An error occurred while creating the order.' })
-            }
-        } catch (error) {
-            console.error('Error creating order:', error.message)
+            sendController.sendLetter(userName, email, date, time)
+            res.json({ status: 'Success', order })
+        } catch (error: unknown) {
+            console.error('Error creating order:', error)
             res.status(500).json({ error: 'An error occurred while creating the order.' })
         }
     }
 
-    async update(req, res) {
+    async update(req: Request, res: Response): Promise<void> {
         try {
             const { orderId, date, time, duration, user_id, master_id } = req.body
+            const parsedOrderId = toNumber(orderId)
+            const parsedDuration = toNumber(duration)
+            const parsedUserId = toNumber(user_id)
+            const parsedMasterId = toNumber(master_id)
 
-            const updatedOrder = await db.query(
-                'UPDATE orders SET date = $1, time = $2, duration = $3, user_id = $4, master_id = $5 WHERE id = $6 RETURNING *',
-                [date, time, duration, user_id, master_id, orderId]
-            )
+            const order = await prisma.order.findUnique({
+                where: {
+                    id: parsedOrderId,
+                },
+                select: {
+                    id: true,
+                },
+            })
 
-            if (updatedOrder.rows.length === 0) {
-                return res.status(404).json({ error: 'Order not found.' })
+            if (!order) {
+                res.status(404).json({ error: 'Order not found.' })
+                return
             }
 
-            res.json(updatedOrder.rows[0])
-        } catch (error) {
-            console.error('Error updating order:', error.message)
+            const updatedOrder = await prisma.order.update({
+                where: {
+                    id: parsedOrderId,
+                },
+                data: {
+                    date,
+                    time,
+                    duration: parsedDuration,
+                    userId: parsedUserId,
+                    masterId: parsedMasterId,
+                },
+            })
+
+            res.json({
+                id: updatedOrder.id,
+                date: updatedOrder.date,
+                time: updatedOrder.time,
+                duration: updatedOrder.duration,
+                user_id: updatedOrder.userId,
+                master_id: updatedOrder.masterId,
+            })
+        } catch (error: unknown) {
+            console.error('Error updating order:', error)
             res.status(500).json({ error: 'An error occurred while updating the order.' })
         }
     }
 
-    async delete(req, res) {
-        const id = req.params.id
+    async delete(req: Request, res: Response): Promise<void> {
+        const id = toNumber(req.params.id)
 
         try {
-            const deleteOrder = await db.query('DELETE FROM orders WHERE id = $1 RETURNING *', [id])
-            if (deleteOrder.rows.length === 0) {
-                return res.status(404).json({ error: 'Order not found.' })
+            const order = await prisma.order.findUnique({
+                where: {
+                    id,
+                },
+            })
+
+            if (!order) {
+                res.status(404).json({ error: 'Order not found.' })
+                return
             }
 
-            res.json(deleteOrder.rows[0])
-        } catch (error) {
-            console.error('Error deleting order:', error.message)
+            const deletedOrder = await prisma.order.delete({
+                where: {
+                    id,
+                },
+            })
+
+            res.json({
+                id: deletedOrder.id,
+                date: deletedOrder.date,
+                time: deletedOrder.time,
+                duration: deletedOrder.duration,
+                user_id: deletedOrder.userId,
+                master_id: deletedOrder.masterId,
+            })
+        } catch (error: unknown) {
+            console.error('Error deleting order:', error)
             res.status(500).json({ error: 'An error occurred while deleting the order.' })
         }
     }

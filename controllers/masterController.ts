@@ -18,6 +18,23 @@ type MasterRow = {
     rating_id: number | null
 }
 
+function toNullableNumber(value: unknown): number | null {
+    if (value === null || value === undefined || value === '') {
+        return null
+    }
+
+    const parsed = Number(value)
+    return Number.isNaN(parsed) ? null : parsed
+}
+
+function toNumberArray(values: unknown): number[] {
+    if (!Array.isArray(values)) {
+        return []
+    }
+
+    return values.map((value) => Number(value)).filter((value) => !Number.isNaN(value))
+}
+
 class MasterController {
     async getAll(req: Request, res: Response): Promise<void> {
         try {
@@ -110,6 +127,8 @@ class MasterController {
 
     async onDateAndTime(req: Request, res: Response): Promise<void> {
         const { cityId, date, time, duration } = req.body
+        const parsedCityId = Number(cityId)
+        const parsedDuration = Number(duration)
 
         try {
             const [masters, ordersByDate] = await Promise.all([
@@ -117,7 +136,7 @@ class MasterController {
                     where: {
                         masterCities: {
                             some: {
-                                cityId: Number(cityId),
+                                cityId: parsedCityId,
                             },
                         },
                     },
@@ -159,7 +178,7 @@ class MasterController {
                     (order) =>
                         order.time &&
                         order.master?.name &&
-                        findMasters(time, duration, order.time, order.duration ?? 0)
+                        findMasters(time, parsedDuration, order.time, order.duration ?? 0)
                 )
                 .map((order) => order.master!.name)
 
@@ -173,19 +192,21 @@ class MasterController {
 
     async create(req: Request, res: Response): Promise<void> {
         const { newName, arr, rating_id } = req.body
+        const parsedRatingId = toNullableNumber(rating_id)
+        const cityIds = toNumberArray(arr)
 
         try {
             const master = await prisma.$transaction(async (tx) => {
                 const createdMaster = await tx.master.create({
                     data: {
                         name: newName,
-                        ratingId: rating_id,
+                        ratingId: parsedRatingId,
                     },
                 })
 
-                if (Array.isArray(arr) && arr.length > 0) {
+                if (cityIds.length > 0) {
                     await tx.masterCity.createMany({
-                        data: arr.map((cityId: number) => ({
+                        data: cityIds.map((cityId) => ({
                             masterId: createdMaster.id,
                             cityId,
                         })),
@@ -261,6 +282,8 @@ class MasterController {
     async update(req: Request, res: Response): Promise<void> {
         const { masterId, newName, ratingId, arr } = req.body
         const parsedMasterId = Number(masterId)
+        const parsedRatingId = toNullableNumber(ratingId)
+        const cityIds = toNumberArray(arr)
 
         try {
             const master = await prisma.master.findUnique({
@@ -281,9 +304,9 @@ class MasterController {
                     },
                 })
 
-                if (Array.isArray(arr) && arr.length > 0) {
+                if (cityIds.length > 0) {
                     await tx.masterCity.createMany({
-                        data: arr.map((cityId: number) => ({
+                        data: cityIds.map((cityId) => ({
                             masterId: parsedMasterId,
                             cityId,
                         })),
@@ -296,7 +319,7 @@ class MasterController {
                     },
                     data: {
                         name: newName,
-                        ratingId,
+                        ratingId: parsedRatingId,
                     },
                 })
             })

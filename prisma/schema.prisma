@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DB_URL")
 }
 
 model Rating {
@@ -47,7 +47,7 @@ model MasterCity {
 
 model User {
   id       Int     @id @default(autoincrement())
-  userName String? @db.VarChar(30)
+  userName String? @map("username") @db.VarChar(30)
   email    String? @db.VarChar(50)
   cityId   Int?    @map("city_id")
   city     City?   @relation(fields: [cityId], references: [id])

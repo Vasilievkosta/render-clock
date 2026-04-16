@@ -1,30 +1,34 @@
 import { NextFunction, Request, Response } from 'express'
-import jwt from 'jsonwebtoken'
+import jwt, { JwtPayload } from 'jsonwebtoken'
+
+const JWT_SECRET = process.env.JWT_SECRET || 'SECRET_KEY'
+
+type AuthTokenPayload = JwtPayload & {
+    email: string
+}
 
 export function authMiddleware(req: Request, res: Response, next: NextFunction): void {
     if (req.method === 'OPTIONS') {
         console.log(req.method)
-        return next()
+        next()
+        return
     }
 
     try {
         const authorizationHeader = req.headers.authorization
 
-        if (authorizationHeader && authorizationHeader.startsWith('Bearer ')) {
-            const token = authorizationHeader.split(' ')[1]
-
-            // Укажи тип payload, если знаешь структуру токена
-            const decodedToken = jwt.verify(token, 'SECRET_KEY')
-
-            // Можно сохранить данные токена в req для дальнейшего использования
-            ;(req as any).user = decodedToken
-
-            return next()
-        } else {
-            return res.status(401).send('Требуется авторизация')
+        if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+            res.status(401).send('Требуется авторизация')
+            return
         }
-    } catch (e: unknown) {
-        console.error(e)
-        return res.status(403).json({ error: 'Не авторизован' })
+
+        const token = authorizationHeader.split(' ')[1]
+        const decodedToken = jwt.verify(token, JWT_SECRET) as AuthTokenPayload
+
+        ;(req as Request & { user?: AuthTokenPayload }).user = decodedToken
+        next()
+    } catch (error: unknown) {
+        console.error(error)
+        res.status(403).json({ error: 'Не авторизован' })
     }
 }
