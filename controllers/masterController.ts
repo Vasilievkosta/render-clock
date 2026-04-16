@@ -1,59 +1,110 @@
 import { Request, Response } from 'express'
-import db from '../db'
+import prisma from '../prismaClient'
 
 function hours(h: string): number {
     return parseInt(h, 10)
 }
 
 function findMasters(startOrder: string, durationOrder: number, startMaster: string, durationMaster: number): boolean {
-    let result =
+    const result =
         hours(startOrder) + durationOrder <= hours(startMaster) ||
         hours(startOrder) >= hours(startMaster) + durationMaster
     return !result
 }
 
+type MasterRow = {
+    id: number
+    name: string
+    rating_id: number | null
+}
+
 class MasterController {
     async getAll(req: Request, res: Response): Promise<void> {
         try {
-            const masters = await db.query(
-                'SELECT m.name AS master_name, c.title AS city_title FROM masters m JOIN master_cities mc ON m.id = mc.master_id JOIN cities c ON mc.city_id = c.id'
+            const masters = await prisma.master.findMany({
+                select: {
+                    name: true,
+                    masterCities: {
+                        select: {
+                            city: {
+                                select: {
+                                    title: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            })
+
+            const result = masters.flatMap((master) =>
+                master.masterCities.map((masterCity) => ({
+                    master_name: master.name,
+                    city_title: masterCity.city.title,
+                }))
             )
-            res.json(masters.rows)
-        } catch (error) {
-            console.error('Error fetching masters:', error.message)
+
+            res.json(result)
+        } catch (error: unknown) {
+            console.error('Error fetching masters:', error)
             res.status(500).json({ error: 'An error occurred while fetching masters.' })
         }
     }
 
     async getRatings(req: Request, res: Response): Promise<void> {
         try {
-            const ratings = await db.query('SELECT * FROM ratings')
-            res.json(ratings.rows)
-        } catch (error: any) {
-            console.error('Error fetching ratings:', error.message)
+            const ratings = await prisma.rating.findMany()
+            res.json(ratings)
+        } catch (error: unknown) {
+            console.error('Error fetching ratings:', error)
             res.status(500).json({ error: 'An error occurred while fetching ratings.' })
         }
     }
 
     async getMasterOfCities(req: Request, res: Response): Promise<void> {
         try {
-            const masters = await db.query(`
-		SELECT m.id AS master_id, m.name AS master_name, 
-			r.id AS rating_id, r.rating AS master_rating,
-			json_agg(json_build_object('id', c.id, 'title', c.title)) AS cities
-		FROM masters m
-		JOIN master_cities mc ON m.id = mc.master_id
-		JOIN cities c ON mc.city_id = c.id
-		LEFT JOIN ratings r ON m.rating_id = r.id
-		GROUP BY m.id, m.name, r.id, r.rating;
-		`)
-            if (masters.rows.length === 0) {
-                return res.status(404).json({ error: 'Мастера не найдены' })
+            const masters = await prisma.master.findMany({
+                select: {
+                    id: true,
+                    name: true,
+                    rating: {
+                        select: {
+                            id: true,
+                            rating: true,
+                        },
+                    },
+                    masterCities: {
+                        select: {
+                            city: {
+                                select: {
+                                    id: true,
+                                    title: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            })
+
+            if (masters.length === 0) {
+                res.status(404).json({ error: 'РњР°СЃС‚РµСЂР° РЅРµ РЅР°Р№РґРµРЅС‹' })
+                return
             }
-            res.json(masters.rows)
+
+            const result = masters.map((master) => ({
+                master_id: master.id,
+                master_name: master.name,
+                rating_id: master.rating?.id ?? null,
+                master_rating: master.rating?.rating ?? null,
+                cities: master.masterCities.map((masterCity) => ({
+                    id: masterCity.city.id,
+                    title: masterCity.city.title,
+                })),
+            }))
+
+            res.json(result)
         } catch (error: unknown) {
-            console.error('Ошибка при получении мастеров:', error)
-            res.status(500).json({ error: 'Произошла ошибка при получении мастеров' })
+            console.error('РћС€РёР±РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё РјР°СЃС‚РµСЂРѕРІ:', error)
+            res.status(500).json({ error: 'РџСЂРѕРёР·РѕС€Р»Р° РѕС€РёР±РєР° РїСЂРё РїРѕР»СѓС‡РµРЅРёРё РјР°СЃС‚РµСЂРѕРІ' })
         }
     }
 
@@ -61,26 +112,59 @@ class MasterController {
         const { cityId, date, time, duration } = req.body
 
         try {
-            const masters = await db.query(
-                'SELECT m.* FROM masters m JOIN master_cities mc ON mc.master_id = m.id JOIN cities c ON c.id = mc.city_id WHERE c.id = $1',
-                [cityId]
-            )
+            const [masters, ordersByDate] = await Promise.all([
+                prisma.master.findMany({
+                    where: {
+                        masterCities: {
+                            some: {
+                                cityId: Number(cityId),
+                            },
+                        },
+                    },
+                    select: {
+                        id: true,
+                        name: true,
+                        ratingId: true,
+                    },
+                }),
+                prisma.order.findMany({
+                    where: {
+                        date,
+                    },
+                    select: {
+                        time: true,
+                        duration: true,
+                        master: {
+                            select: {
+                                name: true,
+                            },
+                        },
+                    },
+                }),
+            ])
 
-            const ordersByDate = await db.query(
-                'SELECT o.id, o.date, o.time, o.duration, u.userName AS user_name, m.name AS master_name, c.title AS city_name FROM orders o JOIN users u ON o.user_id = u.id JOIN masters m ON o.master_id = m.id JOIN cities c ON u.city_id = c.id WHERE o.date = $1;',
-                [date]
-            )
+            const masterRows: MasterRow[] = masters.map((master) => ({
+                id: master.id,
+                name: master.name,
+                rating_id: master.ratingId,
+            }))
 
-            if (ordersByDate.rows.length === 0) {
-                res.json(masters.rows)
-            } else {
-                let bizyMasters = ordersByDate.rows
-                    .filter((o) => findMasters(time, duration, o.time, o.duration))
-                    .map((b) => b.master_name)
-
-                const filteredMasters = masters.rows.filter((obj) => !bizyMasters.includes(obj.name))
-                res.json(filteredMasters)
+            if (ordersByDate.length === 0) {
+                res.json(masterRows)
+                return
             }
+
+            const busyMasters = ordersByDate
+                .filter(
+                    (order) =>
+                        order.time &&
+                        order.master?.name &&
+                        findMasters(time, duration, order.time, order.duration ?? 0)
+                )
+                .map((order) => order.master!.name)
+
+            const filteredMasters = masterRows.filter((master) => !busyMasters.includes(master.name))
+            res.json(filteredMasters)
         } catch (error: unknown) {
             console.error('An error occurred while processing the request:', error)
             res.status(500).json({ error: 'An error occurred while processing the request.' })
@@ -91,16 +175,33 @@ class MasterController {
         const { newName, arr, rating_id } = req.body
 
         try {
-            const master = await db.query('INSERT INTO masters (name, rating_id) VALUES ($1, $2) RETURNING *', [
-                newName,
-                rating_id,
-            ])
-            const masterId = master.rows[0].id
+            const master = await prisma.$transaction(async (tx) => {
+                const createdMaster = await tx.master.create({
+                    data: {
+                        name: newName,
+                        ratingId: rating_id,
+                    },
+                })
 
-            for (const cityId of arr) {
-                await db.query('INSERT INTO master_cities (master_id, city_id) VALUES ($1, $2)', [masterId, cityId])
-            }
-            res.json(master.rows)
+                if (Array.isArray(arr) && arr.length > 0) {
+                    await tx.masterCity.createMany({
+                        data: arr.map((cityId: number) => ({
+                            masterId: createdMaster.id,
+                            cityId,
+                        })),
+                    })
+                }
+
+                return createdMaster
+            })
+
+            res.json([
+                {
+                    id: master.id,
+                    name: master.name,
+                    rating_id: master.ratingId,
+                },
+            ])
         } catch (error: unknown) {
             console.error('An error occurred while creating the master:', error)
             res.status(500).json({ error: 'An error occurred while creating the master.' })
@@ -108,21 +209,49 @@ class MasterController {
     }
 
     async delete(req: Request, res: Response): Promise<void> {
-        const masterId = req.params.id
+        const masterId = Number(req.params.id)
 
         try {
-            const orders = await db.query('SELECT * FROM orders WHERE master_id = $1', [masterId])
+            const ordersCount = await prisma.order.count({
+                where: {
+                    masterId,
+                },
+            })
 
-            if (orders.rows.length > 0) {
+            if (ordersCount > 0) {
                 console.log('Cannot delete master. Orders are associated with the master.')
                 res.status(400).json({ error: 'Cannot delete master. Orders are associated with the master.' })
-            } else {
-                await db.query('DELETE FROM master_cities WHERE master_id = $1', [masterId])
-
-                let data = await db.query('DELETE FROM masters WHERE id = $1', [masterId])
-
-                res.sendStatus(204)
+                return
             }
+
+            const master = await prisma.master.findUnique({
+                where: {
+                    id: masterId,
+                },
+                select: {
+                    id: true,
+                },
+            })
+
+            if (!master) {
+                res.status(404).json({ error: 'Resource not found' })
+                return
+            }
+
+            await prisma.$transaction([
+                prisma.masterCity.deleteMany({
+                    where: {
+                        masterId,
+                    },
+                }),
+                prisma.master.delete({
+                    where: {
+                        id: masterId,
+                    },
+                }),
+            ])
+
+            res.sendStatus(204)
         } catch (error: unknown) {
             console.error('Error deleting master:', error)
             res.status(500).json({ error: 'An error occurred while deleting the master.' })
@@ -131,28 +260,54 @@ class MasterController {
 
     async update(req: Request, res: Response): Promise<void> {
         const { masterId, newName, ratingId, arr } = req.body
+        const parsedMasterId = Number(masterId)
 
         try {
-            const master = await db.query('SELECT * FROM masters WHERE id = $1', [masterId])
+            const master = await prisma.master.findUnique({
+                where: {
+                    id: parsedMasterId,
+                },
+            })
 
-            if (master.rows.length === 0) {
-                return res.status(404).json({ error: 'Resource not found' })
+            if (!master) {
+                res.status(404).json({ error: 'Resource not found' })
+                return
             }
 
-            await db.query('DELETE FROM master_cities WHERE master_id = $1', [masterId])
+            const updatedMaster = await prisma.$transaction(async (tx) => {
+                await tx.masterCity.deleteMany({
+                    where: {
+                        masterId: parsedMasterId,
+                    },
+                })
 
-            for (const cityId of arr) {
-                await db.query('INSERT INTO master_cities (master_id, city_id) VALUES ($1, $2)', [masterId, cityId])
-            }
+                if (Array.isArray(arr) && arr.length > 0) {
+                    await tx.masterCity.createMany({
+                        data: arr.map((cityId: number) => ({
+                            masterId: parsedMasterId,
+                            cityId,
+                        })),
+                    })
+                }
 
-            const updatedMaster = await db.query(
-                'UPDATE masters SET name = $1, rating_id = $2 WHERE id = $3 RETURNING *',
-                [newName, ratingId, masterId]
-            )
+                return tx.master.update({
+                    where: {
+                        id: parsedMasterId,
+                    },
+                    data: {
+                        name: newName,
+                        ratingId,
+                    },
+                })
+            })
 
-            res.json(updatedMaster.rows[0])
-        } catch (error: any) {
-            console.error('Error updating master:', error.message)
+            res.json({
+                id: updatedMaster.id,
+                name: updatedMaster.name,
+                rating_id: updatedMaster.ratingId,
+            })
+        } catch (error: unknown) {
+            console.error('Error updating master:', error)
             res.status(500).json({ error: 'An error occurred while updating the master.' })
         }
     }

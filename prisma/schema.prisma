@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Rating {
+  id      Int      @id @default(autoincrement())
+  rating  Int
+  masters Master[]
+
+  @@map("ratings")
+}
+
+model Master {
+  id           Int          @id @default(autoincrement())
+  name         String       @db.VarChar(255)
+  ratingId     Int?         @map("rating_id")
+  rating       Rating?      @relation(fields: [ratingId], references: [id])
+  orders       Order[]
+  masterCities MasterCity[]
+
+  @@map("masters")
+}
+
+model City {
+  id           Int          @id @default(autoincrement())
+  title        String       @db.VarChar(255)
+  users        User[]
+  masterCities MasterCity[]
+
+  @@map("cities")
+}
+
+model MasterCity {
+  masterId Int    @map("master_id")
+  cityId   Int    @map("city_id")
+  master   Master @relation(fields: [masterId], references: [id])
+  city     City   @relation(fields: [cityId], references: [id])
+
+  @@id([masterId, cityId])
+  @@map("master_cities")
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  userName String? @db.VarChar(30)
+  email    String? @db.VarChar(50)
+  cityId   Int?    @map("city_id")
+  city     City?   @relation(fields: [cityId], references: [id])
+  orders   Order[]
+
+  @@map("users")
+}
+
+model Order {
+  id       Int     @id @default(autoincrement())
+  date     String? @db.VarChar(100)
+  time     String? @db.VarChar(100)
+  duration Int?
+  userId   Int?    @map("user_id")
+  masterId Int?    @map("master_id")
+  user     User?   @relation(fields: [userId], references: [id])
+  master   Master? @relation(fields: [masterId], references: [id])
+
+  @@map("orders")
+}

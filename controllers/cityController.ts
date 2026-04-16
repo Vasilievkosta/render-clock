@@ -1,12 +1,11 @@
 import { Request, Response } from 'express'
-import db from '../db'
-const { body, validationResult } = require('express-validator')
+import prisma from '../prismaClient'
 
 class CityController {
     async getAll(req: Request, res: Response): Promise<void> {
         try {
-            const cities = await db.query('SELECT * FROM cities')
-            res.json(cities.rows)
+            const cities = await prisma.city.findMany()
+            res.json(cities)
         } catch (error: unknown) {
             console.error('An error occurred while processing the request:', error)
             res.status(500).json({ error: 'An error occurred while processing the request.' })
@@ -17,8 +16,13 @@ class CityController {
         const { newTitle } = req.body
 
         try {
-            const city = await db.query('INSERT INTO cities (title) values ($1) RETURNING *', [newTitle])
-            res.json(city.rows)
+            const city = await prisma.city.create({
+                data: {
+                    title: newTitle,
+                },
+            })
+
+            res.json([city])
         } catch (error: unknown) {
             console.error('An error occurred while creating the city:', error)
             res.status(500).json({ error: 'An error occurred while creating the city.' })
@@ -26,18 +30,46 @@ class CityController {
     }
 
     async delete(req: Request, res: Response): Promise<void> {
-        const id = req.params.id
+        const id = Number(req.params.id)
 
         try {
-            const users = await db.query('SELECT * FROM users WHERE city_id = $1', [id])
-            const master_id = await db.query('SELECT * FROM master_cities WHERE city_id = $1', [id])
+            const [usersCount, masterCitiesCount] = await Promise.all([
+                prisma.user.count({
+                    where: {
+                        cityId: id,
+                    },
+                }),
+                prisma.masterCity.count({
+                    where: {
+                        cityId: id,
+                    },
+                }),
+            ])
 
-            if (users.rows.length > 0 || master_id.rows.length > 0) {
+            if (usersCount > 0 || masterCitiesCount > 0) {
                 console.log('Cannot delete city. Users or masters are associated with it.')
                 res.status(400).json({ error: 'Cannot delete city. Users or masters are associated with it.' })
             } else {
-                const city = await db.query('SELECT cities.title FROM cities WHERE id = $1', [id])
-                await db.query('DELETE FROM cities WHERE id = $1', [id])
+                const city = await prisma.city.findUnique({
+                    where: {
+                        id,
+                    },
+                    select: {
+                        id: true,
+                    },
+                })
+
+                if (!city) {
+                    res.status(404).json({ error: 'Resource not found' })
+                    return
+                }
+
+                await prisma.city.delete({
+                    where: {
+                        id,
+                    },
+                })
+
                 res.status(200).send()
             }
         } catch (error: unknown) {
@@ -50,19 +82,29 @@ class CityController {
         const { cityId, newTitle } = req.body
 
         try {
-            const city = await db.query('SELECT * FROM cities WHERE id = $1', [cityId])
+            const city = await prisma.city.findUnique({
+                where: {
+                    id: Number(cityId),
+                },
+            })
 
-            if (city.rows.length === 0) {
-                return res.status(404).json({ error: 'Resource not found' })
+            if (!city) {
+                res.status(404).json({ error: 'Resource not found' })
+                return
             }
 
-            const updatedCity = await db.query('UPDATE cities SET title = $1 WHERE id = $2 RETURNING *', [
-                newTitle,
-                cityId,
-            ])
-            res.json(updatedCity.rows[0])
-        } catch (error: any) {
-            console.error('Error updating city:', error.message)
+            const updatedCity = await prisma.city.update({
+                where: {
+                    id: Number(cityId),
+                },
+                data: {
+                    title: newTitle,
+                },
+            })
+
+            res.json(updatedCity)
+        } catch (error: unknown) {
+            console.error('Error updating city:', error)
             res.status(500).json({ error: 'An error occurred while updating the city.' })
         }
     }
