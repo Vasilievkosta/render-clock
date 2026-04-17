@@ -10,7 +10,7 @@ const swaggerDefinition = {
     },
     servers: [
         {
-            url: 'http://localhost:5000',
+            url: process.env.NODE_ENV === 'production' ? '/' : 'http://localhost:5000',
         },
     ],
     components: {
@@ -22,11 +22,6 @@ const swaggerDefinition = {
             },
         },
     },
-    security: [
-        {
-            bearerAuth: [],
-        },
-    ],
 }
 
 const swaggerOptions = {
